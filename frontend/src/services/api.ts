@@ -20,7 +20,7 @@ const MOCK_BHOPAL_LOCATIONS = [
 
 export async function fetchObservations(): Promise<AtmosphericObservation[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/observations`);
+    const res = await fetch(`${API_BASE}/observations`);
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn("Using client-side fallback observations dataset");
@@ -50,7 +50,7 @@ export async function fetchObservations(): Promise<AtmosphericObservation[]> {
 
 export async function fetchNowcast(): Promise<LocationNowcast[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/nowcast`);
+    const res = await fetch(`${API_BASE}/nowcast`);
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn("Using client-side fallback nowcast dataset");
@@ -77,7 +77,7 @@ export async function fetchNowcast(): Promise<LocationNowcast[]> {
 
 export async function fetchAlerts(): Promise<Alert[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/alerts`);
+    const res = await fetch(`${API_BASE}/alerts`);
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn("Using client-side fallback alerts dataset");
@@ -116,7 +116,7 @@ export async function fetchAlerts(): Promise<Alert[]> {
 
 export async function fetchHistory(): Promise<HistoricalFrame[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/history`);
+    const res = await fetch(`${API_BASE}/history`);
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn("Using client-side fallback history dataset");
@@ -163,7 +163,7 @@ export async function fetchHistory(): Promise<HistoricalFrame[]> {
 
 export async function fetchModelMetrics(): Promise<ModelPerformanceMetrics> {
   try {
-    const res = await fetch(`${API_BASE_URL}/model/metrics`);
+    const res = await fetch(`${API_BASE}/model/metrics`);
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn("Using client-side fallback metrics dataset");
@@ -192,7 +192,7 @@ export async function fetchModelMetrics(): Promise<ModelPerformanceMetrics> {
 
 export async function fetchDataSources(): Promise<DataSourceStatus[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/data-sources`);
+    const res = await fetch(`${API_BASE}/data-sources`);
     if (res.ok) return await res.json();
   } catch (e) {
     console.warn("Using client-side fallback data sources dataset");
