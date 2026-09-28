@@ -7,7 +7,7 @@ import type {
   DataSourceStatus
 } from '../types/weather';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const MOCK_BHOPAL_LOCATIONS = [
   { latitude: 23.2599, longitude: 77.4126, location_name: 'Bhopal Central (MP Nagar)', station_id: 'BPL_AWS_01' },
