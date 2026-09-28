@@ -12,7 +12,10 @@ app = FastAPI(
 # Enable CORS for local Vite development server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For hackathon/demo local environment
+    allow_origins=[
+    "http://localhost:5173",
+    "https://thundercast-ai.vercel.app",  # apna actual Vercel URL
+],  # For hackathon/demo local environment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
