@@ -40,31 +40,40 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 glass-nav px-4 py-3 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          
-          {/* Brand Logo & Location */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-              <Zap className="w-6 h-6 text-white animate-pulse" />
+      <header className="sticky top-0 z-50 glass-nav border-b">
+        <div className="border-b border-gray-800 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3 text-[11px] text-gray-500">
+            <span>Thunderstorm and lightning nowcasting · Bhopal, Madhya Pradesh</span>
+            <span className="hidden sm:inline">Coordinates: 23.2599°N, 77.4126°E</span>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#12345a] text-white flex items-center justify-center rounded-sm">
+              <Zap className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
-                  ThunderCast AI
-                </h1>
-                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-cyan-950 text-cyan-400 border border-cyan-800 uppercase font-mono">
-                  v1.0 Demo
-                </span>
-              </div>
-              <p className="text-xs text-gray-400 flex items-center gap-1">
-                <span>Region: Bhopal, MP, India (23.2599°N, 77.4126°E)</span>
-              </p>
+              <h1 className="text-xl leading-tight font-bold text-[#12345a]">ThunderCast AI</h1>
+              <p className="text-xs text-gray-500">Regional Weather Intelligence Dashboard</p>
             </div>
           </div>
+          <div className="flex items-center gap-3 text-xs">
+            <button
+              onClick={() => setShowDisclaimer(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-950/40 text-amber-400 border border-amber-800/50 rounded-sm"
+              title="View Meteorological Disclaimer"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Prototype · Not an official warning</span>
+            </button>
+            <div className="hidden md:block text-right text-gray-500">
+              <div className="font-semibold text-gray-700">System time</div>
+              <div>{currentTime || 'Syncing...'}</div>
+            </div>
+          </div>
+        </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center bg-gray-900/90 p-1 rounded-xl border border-gray-800 overflow-x-auto max-w-full">
+        <nav aria-label="Main navigation" className="max-w-7xl mx-auto px-4 mt-4 flex items-center gap-1 overflow-x-auto border-t border-gray-800">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -72,44 +81,28 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center gap-2 px-3 py-3 border-b-2 text-xs font-semibold transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-cyan-500 text-gray-950 font-bold shadow-md shadow-cyan-500/20'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800/60'
+                      ? 'border-[#175a91] text-[#12345a]'
+                      : 'border-transparent text-gray-500 hover:text-[#12345a] hover:bg-gray-800/60'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-gray-950' : 'text-gray-400'}`} />
+                  <Icon className="w-4 h-4" />
                   <span>{item.label}</span>
                 </button>
               );
             })}
-          </nav>
-
-          {/* Controls & Timestamp */}
-          <div className="flex items-center space-x-3 text-xs">
-            <button
-              onClick={() => setShowDisclaimer(true)}
-              className="flex items-center space-x-1 px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg transition"
-              title="View Meteorological Disclaimer"
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Prototype Disclaimer</span>
-            </button>
-            <div className="text-right font-mono text-gray-400 text-[11px]">
-              <div>{currentTime || 'Syncing...'}</div>
-            </div>
-          </div>
-
-        </div>
+        </nav>
       </header>
 
       {/* Disclaimer Modal */}
       {showDisclaimer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="glass-card max-w-md w-full p-6 space-y-4 border border-amber-500/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div role="dialog" aria-modal="true" aria-labelledby="notice-title" className="glass-card max-w-md w-full p-6 space-y-4 border border-amber-500/30">
             <div className="flex items-center space-x-2 text-amber-400 font-bold text-lg">
               <AlertTriangle className="w-6 h-6" />
-              <h2>Meteorological Notice</h2>
+              <h2 id="notice-title">Meteorological Notice</h2>
             </div>
             <div className="text-sm text-gray-300 space-y-2">
               <p>
@@ -124,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
             </div>
             <button
               onClick={() => setShowDisclaimer(false)}
-              className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold rounded-lg text-xs transition"
+              className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold rounded-sm text-xs transition"
             >
               I Understand
             </button>

@@ -140,11 +140,11 @@ export const MapPage: React.FC = () => {
                 style: { width: '100%', height: '100%', minHeight: '520px' }
               } as any)}
             >
-              {/* Dark basemap tiles */}
+              {/* Light basemap tiles */}
               <TileLayer
                 {...({
-                  attribution: '&copy; CARTO Dark Matter',
-                  url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                  attribution: '&copy; CARTO',
+                  url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
                 } as any)}
               />
 

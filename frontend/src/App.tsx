@@ -12,7 +12,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<string>('overview');
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-gray-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       <Header activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
@@ -25,8 +25,8 @@ export function App() {
         {activeTab === 'sources' && <DataSourcesPage />}
       </main>
 
-      <footer className="py-4 border-t border-gray-900 text-center text-xs text-gray-500 font-mono">
-        ThunderCast AI &copy; 2026 — AI-Based Thunderstorm & Lightning Nowcasting Platform | Regional Focus: Bhopal, MP, India
+      <footer className="py-4 border-t border-gray-900 bg-white text-center text-xs text-gray-500">
+        ThunderCast AI · Bhopal, Madhya Pradesh · Prototype decision-support system
       </footer>
     </div>
   );

@@ -1,111 +1,97 @@
+@import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --bg-dark: #090d16;
-  --bg-card: #111827;
-  --bg-glass: rgba(17, 24, 39, 0.75);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --accent-cyan: #06b6d4;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
-  --accent-purple: #a855f7;
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
+  font-family: "Segoe UI", "Noto Sans", Arial, sans-serif;
+  color: #1f2937;
+  background: #f4f6f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --gov-navy: #12345a;
+  --gov-blue: #175a91;
+  --gov-border: #d8e0e8;
+  --gov-muted: #586779;
 }
 
 body {
+  min-width: 320px;
   margin: 0;
-  padding: 0;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   overflow-x: hidden;
+  background: #f4f6f8;
+  color: #1f2937;
 }
 
-/* Glassmorphism Card Utility */
+button, input, select {
+  font: inherit;
+}
+
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #7ab6e1;
+  outline-offset: 2px;
+}
+
 .glass-card {
-  background: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-glass);
-  border-radius: 0.75rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid var(--gov-border);
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(16 38 60 / 5%);
 }
 
 .glass-nav {
-  background: rgba(9, 13, 22, 0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-glass);
+  background: #fff;
+  border-bottom: 1px solid var(--gov-border);
 }
 
-/* Neon Glow Badges */
-.badge-low {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+.badge-low, .badge-moderate, .badge-high, .badge-severe,
+.badge-provenance-synthetic, .badge-provenance-prediction,
+.badge-provenance-observation, .badge-provenance-replay {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 3px;
+  font-weight: 700;
 }
 
-.badge-moderate {
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
+.badge-low { background: #e8f4ec; color: #21643a; border: 1px solid #b7d8c0; }
+.badge-moderate { background: #fff4d6; color: #795400; border: 1px solid #e8d18c; }
+.badge-high { background: #fff0e6; color: #9a4217; border: 1px solid #e9b89b; }
+.badge-severe { background: #fbe9e9; color: #9b2525; border: 1px solid #e3aaaa; }
+.badge-provenance-synthetic { background: #fff7df; color: #795400; border: 1px dashed #d8bd72; }
+.badge-provenance-prediction { background: #e8f2fa; color: #175a91; border: 1px solid #b8d0e4; }
+.badge-provenance-observation { background: #eaf1f7; color: #28587d; border: 1px solid #c0d1df; }
+.badge-provenance-replay { background: #f0edf8; color: #5e4b85; border: 1px solid #d1c7e5; }
 
-.badge-high {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
+/* Keep the existing page utility classes while remapping their dark palette. */
+[class*="bg-gray-950"], [class*="bg-gray-900"] { background-color: #f7f9fb !important; }
+[class*="bg-gray-800"], [class*="bg-gray-700"] { background-color: #edf1f5 !important; }
+[class*="text-gray-100"], [class*="text-gray-200"], [class*="text-gray-300"] { color: #26384b !important; }
+[class*="text-gray-400"], [class*="text-gray-500"] { color: #586779 !important; }
+[class*="border-gray-900"], [class*="border-gray-800"], [class*="border-gray-700"] { border-color: #d8e0e8 !important; }
+[class*="bg-cyan-950"], [class*="bg-blue-950"] { background-color: #e8f2fa !important; }
+[class*="bg-amber-950"] { background-color: #fff6df !important; }
+[class*="bg-red-950"] { background-color: #fff0ef !important; }
+[class*="text-cyan-300"], [class*="text-cyan-400"], [class*="text-blue-400"] { color: #175a91 !important; }
+[class*="text-yellow-400"], [class*="text-amber-300"], [class*="text-amber-400"] { color: #795400 !important; }
+[class*="text-red-400"], [class*="text-red-500"] { color: #9b2525 !important; }
+[class*="border-cyan-800"], [class*="border-cyan-700"], [class*="border-gray-800"] { border-color: #c7d7e4 !important; }
+[class*="bg-cyan-500"], [class*="bg-blue-600"] { background-color: #175a91 !important; }
+[class*="bg-gradient"] { background-image: none !important; background-color: #175a91 !important; }
+[class*="text-gray-950"] { color: #fff !important; }
 
-.badge-severe {
-  background-color: rgba(168, 85, 247, 0.2);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
-  animation: pulse-glow 2s infinite;
-}
-
-.badge-provenance-synthetic {
-  background-color: rgba(234, 179, 8, 0.12);
-  color: #eab308;
-  border: 1px dashed rgba(234, 179, 8, 0.4);
-}
-
-.badge-provenance-prediction {
-  background-color: rgba(6, 182, 212, 0.12);
-  color: #06b6d4;
-  border: 1px solid rgba(6, 182, 212, 0.4);
-}
-
-.badge-provenance-observation {
-  background-color: rgba(59, 130, 246, 0.12);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.4);
-}
-
-.badge-provenance-replay {
-  background-color: rgba(139, 92, 246, 0.12);
-  color: #a78bfa;
-  border: 1px solid rgba(139, 92, 246, 0.4);
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
-}
-
-/* Leaflet dark map custom styling */
 .leaflet-container {
-  background-color: #0d131f !important;
-  border-radius: 0.75rem;
+  border-radius: 3px;
+  background: #edf2f5 !important;
+}
+
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #fff !important;
+  color: #26384b !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: #111827 !important;
-  color: #f3f4f6 !important;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.5rem;
+  border: 1px solid var(--gov-border);
+  border-radius: 4px;
 }
 
-.leaflet-popup-tip {
-  background: #111827 !important;
+@media (max-width: 640px) {
+  .leaflet-control-attribution { font-size: 9px; }
 }

@@ -166,11 +166,11 @@ export const NowcastPage: React.FC = () => {
         <div className="h-[320px] w-full pt-4">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="horizon" stroke="#9ca3af" fontSize={12} />
-              <YAxis stroke="#9ca3af" domain={[0, 100]} unit="%" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#d8e0e8" />
+              <XAxis dataKey="horizon" stroke="#586779" fontSize={12} />
+              <YAxis stroke="#586779" domain={[0, 100]} unit="%" fontSize={12} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '8px', color: '#f3f4f6' }}
+                contentStyle={{ backgroundColor: '#ffffff', borderColor: '#d8e0e8', borderRadius: '4px', color: '#26384b' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} />
               <Line type="monotone" dataKey="Thunderstorm" stroke="#06b6d4" strokeWidth={3} dot={{ r: 5 }} />
