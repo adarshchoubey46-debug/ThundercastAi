@@ -11,8 +11,60 @@ import type {
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 const API_BASE = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
+const FORECAST_MODE = import.meta.env.VITE_FORECAST_MODE || 'prototype';
 const MAX_FORECAST_RETRIES = 2;
 const FORECAST_RETRY_DELAY_MS = 1000;
+
+const PROTOTYPE_HOURLY_VALUES = [
+  { thunderstorm: 8, lightning: 5, heavyRain: 3, temperature: 26, dewPoint: 19, precipitation: 0, windSpeed: 7, windDirection: 245, cape: 180, liftedIndex: 3, cloudCover: 22, weatherCode: 1 },
+  { thunderstorm: 7, lightning: 4, heavyRain: 2, temperature: 25, dewPoint: 18, precipitation: 0, windSpeed: 8, windDirection: 250, cape: 160, liftedIndex: 4, cloudCover: 18, weatherCode: 1 },
+  { thunderstorm: 6, lightning: 4, heavyRain: 2, temperature: 24, dewPoint: 18, precipitation: 0, windSpeed: 8, windDirection: 255, cape: 140, liftedIndex: 4, cloudCover: 16, weatherCode: 0 },
+  { thunderstorm: 6, lightning: 3, heavyRain: 2, temperature: 23, dewPoint: 17, precipitation: 0, windSpeed: 7, windDirection: 260, cape: 120, liftedIndex: 5, cloudCover: 14, weatherCode: 0 },
+  { thunderstorm: 5, lightning: 3, heavyRain: 1, temperature: 22, dewPoint: 16, precipitation: 0, windSpeed: 6, windDirection: 265, cape: 100, liftedIndex: 5, cloudCover: 12, weatherCode: 0 },
+  { thunderstorm: 5, lightning: 3, heavyRain: 1, temperature: 21, dewPoint: 15, precipitation: 0, windSpeed: 6, windDirection: 270, cape: 90, liftedIndex: 6, cloudCover: 10, weatherCode: 0 },
+  { thunderstorm: 6, lightning: 4, heavyRain: 2, temperature: 22, dewPoint: 16, precipitation: 0, windSpeed: 7, windDirection: 250, cape: 110, liftedIndex: 5, cloudCover: 14, weatherCode: 0 },
+  { thunderstorm: 7, lightning: 4, heavyRain: 2, temperature: 24, dewPoint: 17, precipitation: 0, windSpeed: 8, windDirection: 240, cape: 130, liftedIndex: 4, cloudCover: 18, weatherCode: 1 },
+  { thunderstorm: 9, lightning: 6, heavyRain: 3, temperature: 26, dewPoint: 19, precipitation: 0, windSpeed: 9, windDirection: 235, cape: 190, liftedIndex: 3, cloudCover: 24, weatherCode: 1 },
+  { thunderstorm: 10, lightning: 7, heavyRain: 4, temperature: 27, dewPoint: 20, precipitation: 0, windSpeed: 10, windDirection: 230, cape: 220, liftedIndex: 2, cloudCover: 28, weatherCode: 2 },
+  { thunderstorm: 9, lightning: 6, heavyRain: 3, temperature: 27, dewPoint: 20, precipitation: 0, windSpeed: 9, windDirection: 225, cape: 200, liftedIndex: 3, cloudCover: 25, weatherCode: 1 },
+  { thunderstorm: 8, lightning: 5, heavyRain: 3, temperature: 26, dewPoint: 19, precipitation: 0, windSpeed: 8, windDirection: 220, cape: 170, liftedIndex: 3, cloudCover: 21, weatherCode: 1 },
+  { thunderstorm: 7, lightning: 4, heavyRain: 2, temperature: 24, dewPoint: 18, precipitation: 0, windSpeed: 7, windDirection: 230, cape: 150, liftedIndex: 4, cloudCover: 18, weatherCode: 0 },
+  { thunderstorm: 6, lightning: 4, heavyRain: 2, temperature: 23, dewPoint: 17, precipitation: 0, windSpeed: 6, windDirection: 240, cape: 130, liftedIndex: 5, cloudCover: 16, weatherCode: 0 },
+  { thunderstorm: 5, lightning: 3, heavyRain: 1, temperature: 22, dewPoint: 16, precipitation: 0, windSpeed: 6, windDirection: 250, cape: 100, liftedIndex: 5, cloudCover: 13, weatherCode: 0 },
+  { thunderstorm: 5, lightning: 3, heavyRain: 1, temperature: 21, dewPoint: 15, precipitation: 0, windSpeed: 5, windDirection: 260, cape: 80, liftedIndex: 6, cloudCover: 10, weatherCode: 0 },
+  { thunderstorm: 6, lightning: 4, heavyRain: 2, temperature: 22, dewPoint: 16, precipitation: 0, windSpeed: 6, windDirection: 255, cape: 110, liftedIndex: 5, cloudCover: 13, weatherCode: 0 },
+  { thunderstorm: 7, lightning: 4, heavyRain: 2, temperature: 24, dewPoint: 17, precipitation: 0, windSpeed: 7, windDirection: 250, cape: 140, liftedIndex: 4, cloudCover: 17, weatherCode: 1 },
+  { thunderstorm: 9, lightning: 6, heavyRain: 3, temperature: 26, dewPoint: 19, precipitation: 0, windSpeed: 8, windDirection: 245, cape: 180, liftedIndex: 3, cloudCover: 23, weatherCode: 1 },
+  { thunderstorm: 10, lightning: 7, heavyRain: 4, temperature: 27, dewPoint: 20, precipitation: 0, windSpeed: 9, windDirection: 240, cape: 210, liftedIndex: 2, cloudCover: 27, weatherCode: 2 },
+  { thunderstorm: 9, lightning: 6, heavyRain: 3, temperature: 27, dewPoint: 20, precipitation: 0, windSpeed: 8, windDirection: 235, cape: 190, liftedIndex: 3, cloudCover: 24, weatherCode: 1 },
+  { thunderstorm: 8, lightning: 5, heavyRain: 3, temperature: 25, dewPoint: 19, precipitation: 0, windSpeed: 7, windDirection: 230, cape: 160, liftedIndex: 4, cloudCover: 20, weatherCode: 1 },
+  { thunderstorm: 7, lightning: 4, heavyRain: 2, temperature: 24, dewPoint: 18, precipitation: 0, windSpeed: 7, windDirection: 235, cape: 140, liftedIndex: 4, cloudCover: 17, weatherCode: 0 },
+  { thunderstorm: 6, lightning: 4, heavyRain: 2, temperature: 23, dewPoint: 17, precipitation: 0, windSpeed: 6, windDirection: 240, cape: 120, liftedIndex: 5, cloudCover: 15, weatherCode: 0 },
+] as const;
+
+export function isPrototypeForecastMode(): boolean {
+  return FORECAST_MODE !== 'live';
+}
+
+function getPrototypeForecast(hours: number): HourlyForecastPoint[] {
+  const start = new Date();
+  start.setUTCMinutes(0, 0, 0);
+  return PROTOTYPE_HOURLY_VALUES.slice(0, hours).map((values, index) => ({
+    time: new Date(start.getTime() + index * 60 * 60 * 1000).toISOString(),
+    temperature_c: values.temperature,
+    dew_point_c: values.dewPoint,
+    precipitation_mm: values.precipitation,
+    wind_speed_kmh: values.windSpeed,
+    wind_direction_deg: values.windDirection,
+    cape_jkg: values.cape,
+    lifted_index: values.liftedIndex,
+    cloud_cover_pct: values.cloudCover,
+    weather_code: values.weatherCode,
+    thunderstorm_probability: values.thunderstorm,
+    lightning_probability: values.lightning,
+    heavy_rain_probability: values.heavyRain,
+  }));
+}
 
 class ForecastHttpError extends Error {
   readonly status: number;
@@ -85,6 +137,9 @@ export async function getForecast(
   onRetry?: (nextAttempt: number) => void
 ): Promise<HourlyForecastPoint[]> {
   const requestedHours = Math.max(1, Math.min(24, Math.floor(hours)));
+  if (isPrototypeForecastMode()) {
+    return getPrototypeForecast(requestedHours);
+  }
   const url = new URL(`${API_BASE}/forecast`);
   url.searchParams.set('lat', '23.2599');
   url.searchParams.set('lon', '77.4126');

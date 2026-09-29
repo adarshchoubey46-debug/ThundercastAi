@@ -8,7 +8,6 @@ import {
   RotateCcw,
   BarChart2,
   Database,
-  ShieldCheck,
   Languages
 } from 'lucide-react';
 
@@ -38,7 +37,6 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, languag
     { id: 'replay', label: language === 'hi' ? 'पुराना मौसम' : 'Historical Replay', icon: RotateCcw },
     { id: 'performance', label: language === 'hi' ? 'मॉडल मेट्रिक्स' : 'Model Metrics', icon: BarChart2 },
     { id: 'sources', label: language === 'hi' ? 'डेटा स्रोत' : 'Data Sources', icon: Database },
-    { id: 'safety', label: language === 'hi' ? 'सुरक्षा और आश्रय' : 'Safety & Shelters', icon: ShieldCheck },
   ];
 
   return (

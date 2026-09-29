@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { HourlyForecastPoint, RiskLevel } from '../types/weather';
-import { getForecast } from '../services/api';
+import { getForecast, isPrototypeForecastMode } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
 import {
   LineChart,
@@ -15,6 +15,7 @@ import {
 import { Clock, Sliders, TrendingUp, RefreshCw } from 'lucide-react';
 
 export const NowcastPage: React.FC = () => {
+  const prototypeMode = isPrototypeForecastMode();
   const [forecastHours, setForecastHours] = useState<HourlyForecastPoint[]>([]);
   const [selectedHours, setSelectedHours] = useState<number>(6);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -75,7 +76,7 @@ export const NowcastPage: React.FC = () => {
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <Clock className="w-4 h-4 text-cyan-400" />
-            <span>Hourly Thunderstorm Forecast</span>
+            <span>{prototypeMode ? 'Hourly Thunderstorm Forecast · Prototype Scenario' : 'Hourly Thunderstorm Forecast'}</span>
           </h2>
           <p className="text-xs text-gray-400">
             Location: Bhopal, Madhya Pradesh | Forecast issued: {forecastHours[0]?.time ?? 'Waiting for forecast'} UTC | System time: {systemTime}
@@ -84,7 +85,10 @@ export const NowcastPage: React.FC = () => {
 
         <div className="flex items-center space-x-3">
           {forecastHours.length > 0 && (
-            <ProvenanceBadge sourceType="MODEL_PREDICTION" sourceName="Open-Meteo hourly forecast" />
+            <ProvenanceBadge
+              sourceType="MODEL_PREDICTION"
+              sourceName={prototypeMode ? 'Prototype forecast scenario' : 'Open-Meteo hourly forecast'}
+            />
           )}
           <button
             onClick={() => void loadData(selectedHours)}
@@ -107,7 +111,7 @@ export const NowcastPage: React.FC = () => {
               {selectedHours} Hours
             </span>
           </label>
-          <span className="text-xs text-gray-400 font-mono">Open-Meteo hourly range</span>
+          <span className="text-xs text-gray-400 font-mono">{prototypeMode ? 'Fixed sample values · not live weather' : 'Open-Meteo hourly range'}</span>
         </div>
 
         {/* Range Slider */}
@@ -182,7 +186,7 @@ export const NowcastPage: React.FC = () => {
               <TrendingUp className="w-4 h-4 text-cyan-400" />
               <span>Hourly Weather Risk Indicators</span>
             </h3>
-            <p className="text-xs text-gray-400">Open-Meteo model fields across the selected {selectedHours}-hour forecast</p>
+            <p className="text-xs text-gray-400">{prototypeMode ? 'Prototype scenario · fixed sample values · not a current forecast' : `Open-Meteo model fields across the selected ${selectedHours}-hour forecast`}</p>
           </div>
         </div>
 
@@ -202,7 +206,7 @@ export const NowcastPage: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-[11px] text-gray-500">Risk indicators are derived from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes; they are not calibrated probabilities or official warnings.</p>
+        <p className="text-[11px] text-gray-500">{prototypeMode ? 'Prototype scenario only. Values are predefined for presentation and are not current weather, calibrated probabilities, or official warnings.' : 'Risk indicators are derived from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes; they are not calibrated probabilities or official warnings.'}</p>
       </div>
 
     </div>

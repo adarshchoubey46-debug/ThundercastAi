@@ -8,6 +8,7 @@ import type {
 import {
   fetchObservations,
   getForecast,
+  isPrototypeForecastMode,
   fetchAlerts,
   fetchDataSources
 } from '../services/api';
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react';
 
 export const OverviewPage: React.FC = () => {
+  const prototypeMode = isPrototypeForecastMode();
   const [observations, setObservations] = useState<AtmosphericObservation[]>([]);
   const [forecastHours, setForecastHours] = useState<HourlyForecastPoint[]>([]);
   const [forecastUnavailable, setForecastUnavailable] = useState<boolean>(false);
@@ -186,12 +188,12 @@ export const OverviewPage: React.FC = () => {
             <div>
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <CloudLightning className="w-4 h-4 text-cyan-400" />
-                <span>Live Thunderstorm Outlook</span>
+                <span>{prototypeMode ? 'Thunderstorm Outlook · Prototype Scenario' : 'Live Thunderstorm Outlook'}</span>
               </h2>
-              <p className="text-xs text-gray-400">Open-Meteo hourly forecast · Bhopal</p>
+              <p className="text-xs text-gray-400">{prototypeMode ? 'Fixed sample values · not live weather · Bhopal' : 'Open-Meteo hourly forecast · Bhopal'}</p>
             </div>
             {forecastHours.length > 0 && (
-              <ProvenanceBadge sourceType="MODEL_PREDICTION" sourceName="Open-Meteo forecast" compact />
+              <ProvenanceBadge sourceType="MODEL_PREDICTION" sourceName={prototypeMode ? 'Prototype forecast scenario' : 'Open-Meteo forecast'} compact />
             )}
           </div>
 
@@ -262,7 +264,7 @@ export const OverviewPage: React.FC = () => {
           {forecastUnavailable && <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">Live weather data is temporarily unavailable. Please retry later.</p>}
           {forecastWaking && <p role="status" className="text-xs text-amber-700">Waking up server… retrying forecast request.</p>}
           <div className="p-3 bg-gray-950/60 rounded-lg text-xs text-gray-400 border border-gray-800">
-            Thunderstorm and lightning values are derived risk indicators from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes. They are not calibrated probabilities or official warnings.
+            {prototypeMode ? 'Prototype scenario only. Values are predefined for presentation and are not current weather, calibrated probabilities, or official warnings.' : 'Thunderstorm and lightning values are derived risk indicators from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes. They are not calibrated probabilities or official warnings.'}
           </div>
         </div>
 

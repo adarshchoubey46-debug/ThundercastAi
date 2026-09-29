@@ -2,13 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Alert, AtmosphericObservation } from '../types/weather';
 import { fetchAlerts, fetchObservations } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
+import { SafetyPage } from './SafetyPage';
 import {
   Bell,
   AlertTriangle,
   Send,
   Clock,
   MapPin,
-  BellRing
+  BellRing,
+  Building2,
+  Hospital,
+  School,
+  ShieldCheck
 } from 'lucide-react';
 
 interface AlertsPageProps {
@@ -20,6 +25,8 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
   const [targetArea, setTargetArea] = useState<string>('Bhopal Central & MP Nagar');
   const [simulatedRisk, setSimulatedRisk] = useState<Alert['risk_level']>('SEVERE');
   const [simulationLog, setSimulationLog] = useState<string[]>([]);
+  const [organizationType, setOrganizationType] = useState<'school' | 'hospital'>('school');
+  const [dispatchPreview, setDispatchPreview] = useState<string | null>(null);
   const [lastChecked, setLastChecked] = useState<string>('Checking observations...');
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
@@ -95,11 +102,17 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
 
   const simulateRiskAlert = () => {
     const timestamp = new Date().toLocaleTimeString();
+    const responseMeasures = organizationType === 'school'
+      ? 'Move students and staff into a sturdy enclosed building, keep everyone away from windows, cancel outdoor activities, and follow district emergency instructions.'
+      : 'Secure patients and staff indoors, protect essential power and communications, pause non-essential transfers during severe weather, and follow facility emergency procedures.';
+    setDispatchPreview(`${simulatedRisk} risk · ${targetArea}\n${responseMeasures}\nPreview only: no organization recipients are configured and no message was sent.`);
     setSimulationLog((current) => [
-      `[${timestamp}] ${simulatedRisk} risk trigger evaluated for ${targetArea}`,
+      `[${timestamp}] Preview prepared for ${organizationType} · ${simulatedRisk} risk · ${targetArea}`,
       ...current
     ]);
   };
+
+  const elevatedAlerts = alerts.filter((alert) => alert.risk_level === 'HIGH' || alert.risk_level === 'SEVERE');
 
   const getRiskClass = (level: string) => {
     switch (level) {
@@ -245,7 +258,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
           {/* Broadcast Log */}
           <div className="space-y-2 pt-3 border-t border-gray-800">
             <span className="text-xs font-bold text-gray-400">Current feed:</span>
-            <div className="space-y-2 max-h-[220px] overflow-y-auto font-mono text-[11px]">
+            <div className="space-y-2 max-h-55 overflow-y-auto font-mono text-[11px]">
               {alerts.filter((alert) => alert.affected_area.includes(targetArea.split(' &')[0])).map((alert) => (
                 <div key={alert.id} className="p-2.5 bg-cyan-950/30 border border-cyan-800/40 rounded text-cyan-800">
                   <div className="font-bold">{alert.risk_level} · {alert.affected_area}</div>
@@ -259,7 +272,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
               )}
             </div>
             <span className="text-xs font-bold text-gray-400">Trigger log:</span>
-            <div className="space-y-2 max-h-[160px] overflow-y-auto font-mono text-[11px]">
+            <div className="space-y-2 max-h-40 overflow-y-auto font-mono text-[11px]">
               {simulationLog.length === 0 ? (
                 <div className="text-[11px] text-gray-500 italic p-3 bg-gray-900/50 rounded border border-gray-800">
                   No risk triggers evaluated.
@@ -274,6 +287,68 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
         </div>
 
       </div>
+
+      <section className="glass-card p-5 space-y-4" aria-labelledby="area-coordination-heading">
+        <div className="flex items-start gap-3">
+          <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-[#175a91]" />
+          <div>
+            <h3 id="area-coordination-heading" className="text-sm font-bold text-gray-800">High-risk area coordination</h3>
+            <p className="mt-1 text-xs text-gray-600">Organization counts and government-authorized shelters require a verified local directory, which is not connected to this prototype.</p>
+          </div>
+        </div>
+
+        {elevatedAlerts.length > 0 ? (
+          <div className="space-y-3">
+            {elevatedAlerts.map((alert) => (
+              <article key={`coordination-${alert.id}`} className="rounded-sm border border-amber-200 bg-amber-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-bold text-gray-800">{alert.risk_level} · {alert.affected_area}</div>
+                  <span className="text-[11px] text-gray-600">{alert.expected_window}</span>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-sm border border-gray-200 bg-white p-3 text-xs">
+                    <School className="mb-1 h-4 w-4 text-[#175a91]" />
+                    <strong>Nearby schools</strong>
+                    <p className="mt-1 text-gray-600">Count unavailable · verified directory not connected</p>
+                  </div>
+                  <div className="rounded-sm border border-gray-200 bg-white p-3 text-xs">
+                    <Hospital className="mb-1 h-4 w-4 text-red-700" />
+                    <strong>Nearby hospitals</strong>
+                    <p className="mt-1 text-gray-600">Count unavailable · verified directory not connected</p>
+                  </div>
+                  <div className="rounded-sm border border-gray-200 bg-white p-3 text-xs">
+                    <ShieldCheck className="mb-1 h-4 w-4 text-emerald-700" />
+                    <strong>Authorized shelters</strong>
+                    <p className="mt-1 text-gray-600">No verified government shelter directory is available.</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-sm border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">No HIGH or SEVERE alert is currently available. Organization counts are not estimated.</p>
+        )}
+
+        <div className="grid gap-4 border-t border-gray-200 pt-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-gray-700">Organization response preview</h4>
+            <label className="block text-xs text-gray-600" htmlFor="organization-type">Preview guidance for</label>
+            <select id="organization-type" value={organizationType} onChange={(event) => setOrganizationType(event.target.value as 'school' | 'hospital')} className="w-full rounded-sm border border-gray-300 bg-white p-2 text-xs text-gray-800">
+              <option value="school">School</option>
+              <option value="hospital">Hospital</option>
+            </select>
+            <button type="button" onClick={simulateRiskAlert} className="inline-flex items-center gap-2 rounded-sm border border-amber-300 bg-amber-100 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-amber-200">
+              <Send className="h-3.5 w-3.5" /> Prepare response preview
+            </button>
+          </div>
+          <div role="status" className="min-h-20 whitespace-pre-line rounded-sm border border-gray-200 bg-gray-50 p-3 text-xs leading-relaxed text-gray-700">
+            {dispatchPreview ?? 'No message prepared. This prototype does not send messages to schools, hospitals, or other organizations.'}
+          </div>
+        </div>
+        <p className="text-[11px] text-amber-800">Do not use this prototype to issue public warnings. Verify alerts, recipients, shelters, and response procedures with the appropriate district authority before operational use.</p>
+      </section>
+
+      <SafetyPage />
 
     </div>
   );
