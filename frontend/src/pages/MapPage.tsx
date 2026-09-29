@@ -4,6 +4,7 @@ import L from 'leaflet';
 import type { AtmosphericObservation } from '../types/weather';
 import { fetchNowcast, fetchObservations } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
+import { useTranslation } from '../i18n';
 import {
   Layers,
   Zap,
@@ -51,6 +52,7 @@ const lightningIcon = L.divIcon({
 });
 
 export const MapPage: React.FC = () => {
+  const { t } = useTranslation();
   const [observations, setObservations] = useState<AtmosphericObservation[]>([]);
   const [nowcasts, setNowcasts] = useState<Awaited<ReturnType<typeof fetchNowcast>>>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -147,16 +149,16 @@ export const MapPage: React.FC = () => {
 
   const locateUser = () => {
     if (!navigator.geolocation) {
-      setLocationMessage('Location is not available in this browser.');
+      setLocationMessage(t('Location is not available in this browser.'));
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         setUserLocation([coords.latitude, coords.longitude]);
-        setLocationMessage('Map centered on your location.');
+        setLocationMessage(t('Map centered on your location.'));
       },
-      () => setLocationMessage('Location permission was not granted.'),
+      () => setLocationMessage(t('Location permission was not granted.')),
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
   };
@@ -169,42 +171,42 @@ export const MapPage: React.FC = () => {
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
-            <span>Interactive Weather Risk Map — Bhopal Region</span>
+            <span>{t('Interactive Weather Risk Map — Bhopal Region')}</span>
           </h2>
           <p className="text-xs text-gray-400">
-            {observations.length} station feeds · refreshed every 30 sec · Map: {activeMapSource}
-            {lastUpdated && ` · Updated ${lastUpdated.toLocaleTimeString()}`}
+            {observations.length} {t('station feeds')} · {t('refreshed every 30 sec')} · {t('Map:')} {t(activeMapSource)}
+            {lastUpdated && ` · ${t('Updated')} ${lastUpdated.toLocaleTimeString()}`}
           </p>
         </div>
 
-        <div role="group" aria-label="Map style" className="inline-flex border border-gray-300 rounded-sm overflow-hidden">
+        <div role="group" aria-label={t('Map style')} className="inline-flex border border-gray-300 rounded-sm overflow-hidden">
           <button
             type="button"
             aria-pressed={mapStyle === 'street'}
             onClick={() => setMapStyle('street')}
             className={`px-3 py-2 text-xs font-semibold ${mapStyle === 'street' ? 'bg-[#12345a] text-white' : 'bg-white text-gray-700'}`}
-          >Street</button>
+          >{t('Street')}</button>
           <button
             type="button"
             aria-pressed={mapStyle === 'satellite'}
             onClick={() => setMapStyle('satellite')}
             className={`px-3 py-2 text-xs font-semibold ${mapStyle === 'satellite' ? 'bg-[#12345a] text-white' : 'bg-white text-gray-700'}`}
-          >Satellite</button>
+          >{t('Satellite')}</button>
         </div>
 
-        <div role="group" aria-label="Forecast viewing period" className="inline-flex border border-gray-300 rounded-sm overflow-hidden">
+        <div role="group" aria-label={t('Forecast viewing period')} className="inline-flex border border-gray-300 rounded-sm overflow-hidden">
           <button
             type="button"
             aria-pressed={viewPeriod === 'current'}
             onClick={() => setViewPeriod('current')}
             className={`px-3 py-2 text-xs font-semibold ${viewPeriod === 'current' ? 'bg-[#12345a] text-white' : 'bg-white text-gray-700'}`}
-          >Current conditions</button>
+          >{t('Current conditions')}</button>
           <button
             type="button"
             aria-pressed={viewPeriod === 'monsoon'}
             onClick={() => setViewPeriod('monsoon')}
             className={`px-3 py-2 text-xs font-semibold ${viewPeriod === 'monsoon' ? 'bg-[#12345a] text-white' : 'bg-white text-gray-700'}`}
-          >Monsoon season</button>
+          >{t('Monsoon season')}</button>
         </div>
 
         {/* Map Layer Toggles */}
@@ -217,7 +219,7 @@ export const MapPage: React.FC = () => {
             }`}
           >
             <CloudRain className="w-3.5 h-3.5" />
-            <span>Radar Reflectivity</span>
+            <span>{t('Radar Reflectivity')}</span>
           </button>
 
           <button
@@ -228,7 +230,7 @@ export const MapPage: React.FC = () => {
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>Lightning Markers</span>
+            <span>{t('Lightning Markers')}</span>
           </button>
 
           <button
@@ -239,7 +241,7 @@ export const MapPage: React.FC = () => {
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>Risk Zones</span>
+            <span>{t('Risk Zones')}</span>
           </button>
 
           <button
@@ -250,7 +252,7 @@ export const MapPage: React.FC = () => {
             }`}
           >
             <Navigation className="w-3.5 h-3.5" />
-            <span>Storm Track Vector</span>
+            <span>{t('Storm Track Vector')}</span>
           </button>
         </div>
       </div>
@@ -289,7 +291,7 @@ export const MapPage: React.FC = () => {
 
               {userLocation && (
                 <Marker position={userLocation}>
-                  <Popup>Your current location</Popup>
+                  <Popup>{t('Your current location')}</Popup>
                 </Marker>
               )}
 
@@ -303,7 +305,7 @@ export const MapPage: React.FC = () => {
                     <div className="space-y-1 text-xs">
                       <strong>{savedSafetySite.name}</strong>
                       <div>{savedSafetySite.address}</div>
-                      <div>Saved by you. Confirm availability with local authorities.</div>
+                      <div>{t('Saved by you. Confirm availability with local authorities.')}</div>
                     </div>
                   </Popup>
                 </CircleMarker>
@@ -324,7 +326,7 @@ export const MapPage: React.FC = () => {
                       <Popup>
                         <div className="text-xs space-y-1">
                           <div className="font-bold">{observation.location.location_name}</div>
-                          <div>Reflectivity: {reflectivity.toFixed(1)} dBZ</div>
+                          <div>{t('Reflectivity:')} {reflectivity.toFixed(1)} dBZ</div>
                           <ProvenanceBadge sourceType={observation.source_type} sourceName={observation.source_name} compact />
                         </div>
                       </Popup>
@@ -349,9 +351,9 @@ export const MapPage: React.FC = () => {
                 >
                   <Popup>
                     <div className="text-xs space-y-1">
-                      <div className="font-bold text-red-400">15-minute regional risk screen</div>
-                      <div>Thunderstorm: {displayedThunderstormProbability ?? 'Unavailable'}% | Heavy rain: {displayedHeavyRainProbability ?? 'Unavailable'}%</div>
-                      <div className="text-[10px] text-gray-500">View: {viewPeriod === 'current' ? 'Current conditions' : 'Monsoon season reference'}</div>
+                      <div className="font-bold text-red-400">{t('15-minute regional risk screen')}</div>
+                      <div>{t('Thunderstorm:')} {displayedThunderstormProbability ?? t('Unavailable')}% | {t('Heavy rain:')} {displayedHeavyRainProbability ?? t('Unavailable')}%</div>
+                      <div className="text-[10px] text-gray-500">{t('View:')} {viewPeriod === 'current' ? t('Current conditions') : t('Monsoon season reference')}</div>
                     </div>
                   </Popup>
                 </Circle>
@@ -378,8 +380,8 @@ export const MapPage: React.FC = () => {
                 >
                   <Popup>
                     <div className="text-xs">
-                      <span className="font-bold text-yellow-700">Lightning activity · {observation.location.location_name}</span>
-                      <div className="text-[10px] text-gray-600">{observation.lightning_flashes_count} flashes in the latest station record</div>
+                      <span className="font-bold text-yellow-700">{t('Lightning activity ·')} {observation.location.location_name}</span>
+                      <div className="text-[10px] text-gray-600">{observation.lightning_flashes_count} {t('flashes in the latest station record')}</div>
                     </div>
                   </Popup>
                 </Marker>
@@ -403,14 +405,14 @@ export const MapPage: React.FC = () => {
                     <Popup>
                       <div className="text-xs space-y-1">
                         <div className="font-bold text-white">{obs.location.location_name}</div>
-                        <div>Temp: {obs.temperature_c}°C | Rain: {obs.rainfall_mm_hr} mm/h</div>
-                        <div>Reflectivity: {obs.radar_reflectivity_dbz} dBZ</div>
-                        <div>Lightning: {obs.lightning_flashes_count} flashes</div>
+                        <div>{t('Temp:')} {obs.temperature_c}°C | {t('Rain:')} {obs.rainfall_mm_hr} mm/h</div>
+                        <div>{t('Reflectivity:')} {obs.radar_reflectivity_dbz} dBZ</div>
+                        <div>{t('Lightning:')} {obs.lightning_flashes_count} {t('flashes')}</div>
                         <button
                           onClick={() => setSelectedStation(obs)}
                           className="mt-1 text-[10px] text-cyan-400 font-bold underline"
                         >
-                          Inspect Nowcast Details &rarr;
+                          {t('Inspect Nowcast Details →')}
                         </button>
                       </div>
                     </Popup>
@@ -426,7 +428,7 @@ export const MapPage: React.FC = () => {
                 className="glass-card px-3 py-2 text-xs font-semibold text-gray-700 flex items-center gap-2 hover:bg-slate-50"
               >
                 <LocateFixed className="w-4 h-4 text-cyan-700" />
-                <span>Locate me</span>
+                <span>{t('Locate me')}</span>
               </button>
               {locationMessage && (
                 <span role="status" className="glass-card max-w-[220px] px-2 py-1 text-[11px] text-gray-600">
@@ -437,23 +439,23 @@ export const MapPage: React.FC = () => {
 
             {/* Map Legend Overlay Card */}
             <div className="absolute bottom-4 right-4 z-[1000] glass-card p-3 text-[11px] space-y-2 border border-gray-800 bg-gray-950/90 max-w-xs">
-              <div className="font-bold text-white border-b border-gray-800 pb-1">Map Risk Legends</div>
+              <div className="font-bold text-white border-b border-gray-800 pb-1">{t('Map Risk Legends')}</div>
               <div className="space-y-1 font-mono">
                 <div className="flex items-center space-x-2">
                   <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-                  <span>Low Risk (&lt;30%)</span>
+                  <span>{t('Low Risk (<30%)')}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="w-3 h-3 rounded-full bg-amber-500"></span>
-                  <span>Moderate Risk (30–60%)</span>
+                  <span>{t('Moderate Risk (30–60%)')}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                  <span>High Risk (60–80%)</span>
+                  <span>{t('High Risk (60–80%)')}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="w-3 h-3 rounded-full bg-purple-500"></span>
-                  <span>Severe Hazard (&gt;80%)</span>
+                  <span>{t('Severe Hazard (>80%)')}</span>
                 </div>
               </div>
             </div>
@@ -466,7 +468,7 @@ export const MapPage: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-gray-800">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
                 <Info className="w-4 h-4 text-cyan-400" />
-                <span>Station Forecast</span>
+                <span>{t('Station Forecast')}</span>
               </h3>
               {selectedStation && (
                 <ProvenanceBadge sourceType={selectedStation.source_type} sourceName={selectedStation.source_name} compact />
@@ -482,26 +484,26 @@ export const MapPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-2 font-mono">
                   <div className="bg-gray-900/80 p-2 rounded border border-gray-800">
-                    <div className="text-gray-400 text-[10px]">Temperature</div>
+                    <div className="text-gray-400 text-[10px]">{t('Temperature')}</div>
                     <div className="text-white font-bold">{selectedStation.temperature_c}°C</div>
                   </div>
                   <div className="bg-gray-900/80 p-2 rounded border border-gray-800">
-                    <div className="text-gray-400 text-[10px]">Rain Rate</div>
+                    <div className="text-gray-400 text-[10px]">{t('Rain Rate')}</div>
                     <div className="text-cyan-400 font-bold">{selectedStation.rainfall_mm_hr} mm/h</div>
                   </div>
                   <div className="bg-gray-900/80 p-2 rounded border border-gray-800">
-                    <div className="text-gray-400 text-[10px]">Reflectivity</div>
+                    <div className="text-gray-400 text-[10px]">{t('Reflectivity')}</div>
                     <div className="text-yellow-400 font-bold">{selectedStation.radar_reflectivity_dbz} dBZ</div>
                   </div>
                   <div className="bg-gray-900/80 p-2 rounded border border-gray-800">
-                    <div className="text-gray-400 text-[10px]">Lightning</div>
-                    <div className="text-purple-400 font-bold">{selectedStation.lightning_flashes_count} strikes</div>
+                    <div className="text-gray-400 text-[10px]">{t('Lightning')}</div>
+                    <div className="text-purple-400 font-bold">{selectedStation.lightning_flashes_count} {t('strikes')}</div>
                   </div>
                 </div>
 
                 {/* Forecast Timeline at Station */}
                 <div className="space-y-2 pt-2 border-t border-gray-800">
-                  <div className="font-bold text-gray-300">Station 60-Min Forecast Profile:</div>
+                  <div className="font-bold text-gray-300">{t('Station 60-Min Forecast Profile:')}</div>
                   {[
                     { h: 15, prob: 78, risk: 'HIGH' },
                     { h: 30, prob: 88, risk: 'SEVERE' },
@@ -509,20 +511,20 @@ export const MapPage: React.FC = () => {
                     { h: 60, prob: 42, risk: 'MODERATE' },
                   ].map((p) => (
                     <div key={p.h} className="flex items-center justify-between bg-gray-900/60 p-2 rounded border border-gray-800 font-mono">
-                      <span className="text-cyan-400">+{p.h} min</span>
-                      <span className="text-white font-bold">{p.prob}% Thunderstorm</span>
-                      <span className="text-[10px] text-amber-400 font-bold">{p.risk}</span>
+                      <span className="text-cyan-400">+{p.h} {t('mins')}</span>
+                      <span className="text-white font-bold">{p.prob}% {t('Thunderstorm')}</span>
+                      <span className="text-[10px] text-amber-400 font-bold">{t(p.risk)}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-gray-400 mt-4">Select a station marker on the map to inspect location telemetry.</p>
+              <p className="text-xs text-gray-400 mt-4">{t('Select a station marker on the map to inspect location telemetry.')}</p>
             )}
           </div>
 
           <div className="p-2.5 bg-gray-950/80 rounded border border-gray-800 text-[10px] text-gray-400">
-            Bhopal district coverage · Upper Lake · MP Nagar · Indrapuri · Kolar Road
+            {t('Bhopal district coverage · Upper Lake · MP Nagar · Indrapuri · Kolar Road')}
           </div>
         </div>
 

@@ -7,7 +7,8 @@ from app.api.endpoints import (
     history,
     model,
     data_sources,
-    forecast
+    forecast,
+    assistant
 )
 
 api_router = APIRouter()
@@ -20,3 +21,4 @@ api_router.include_router(history.router, tags=["History"])
 api_router.include_router(model.router, tags=["Model Metrics"])
 api_router.include_router(data_sources.router, tags=["Data Sources"])
 api_router.include_router(forecast.router, tags=["Forecast"])
+api_router.include_router(assistant.router, tags=["Assistant"])

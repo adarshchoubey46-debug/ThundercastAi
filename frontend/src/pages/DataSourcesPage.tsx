@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { DataSourceStatus } from '../types/weather';
 import { fetchDataSources } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
+import { useTranslation } from '../i18n';
 import {
   Database,
   Upload,
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react';
 
 export const DataSourcesPage: React.FC = () => {
+  const { t } = useTranslation();
   const [sources, setSources] = useState<DataSourceStatus[]>([]);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
@@ -24,7 +26,7 @@ export const DataSourcesPage: React.FC = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setUploadStatus(`Uploaded dataset '${file.name}' (${(file.size / 1024).toFixed(1)} KB). Ingested into Local Adapter Pipeline.`);
+      setUploadStatus(`${t('Uploaded dataset')} '${file.name}' (${(file.size / 1024).toFixed(1)} KB). ${t('Ingested into Local Adapter Pipeline.')}`);
     }
   };
 
@@ -36,14 +38,14 @@ export const DataSourcesPage: React.FC = () => {
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <Database className="w-4 h-4 text-cyan-400" />
-            <span>Meteorological Data Ingestion Adapters & Sensor Health</span>
+            <span>{t('Meteorological Data Ingestion Adapters & Sensor Health')}</span>
           </h2>
           <p className="text-xs text-gray-400">
-            Adapters for IMD Doppler Radar, MOSDAC INSAT-3DR Satellite, and IITM Lightning Stroke Telemetry
+            {t('Adapters for IMD Doppler Radar, MOSDAC INSAT-3DR Satellite, and IITM Lightning Stroke Telemetry')}
           </p>
         </div>
 
-        <ProvenanceBadge sourceType="REAL_OBSERVATION" sourceName="Configured weather source status" />
+        <ProvenanceBadge sourceType="REAL_OBSERVATION" sourceName={t('Configured weather source status')} />
       </div>
 
       {/* Main Data Sources Cards */}
@@ -53,32 +55,32 @@ export const DataSourcesPage: React.FC = () => {
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">{source.source_id}</span>
-                <h3 className="text-sm font-bold text-white mt-0.5">{source.source_name}</h3>
+                <h3 className="text-sm font-bold text-white mt-0.5">{t(source.source_name)}</h3>
               </div>
               <span className={`px-2 py-0.5 text-[10px] font-mono rounded font-bold ${
                 source.status === 'OPERATIONAL'
                   ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
                   : 'bg-amber-950 text-amber-400 border border-amber-800'
               }`}>
-                {source.status}
+                {t(source.status)}
               </span>
             </div>
 
-            <p className="text-xs text-gray-300">{source.type}</p>
+            <p className="text-xs text-gray-300">{t(source.type)}</p>
 
             <div className="p-3 bg-gray-900/60 rounded border border-gray-800 space-y-1.5 text-xs font-mono">
               <div className="flex justify-between">
-                <span className="text-gray-400">Data Freshness:</span>
-                <span className="text-cyan-300">{source.data_freshness}</span>
+                <span className="text-gray-400">{t('Data Freshness:')}</span>
+                <span className="text-cyan-300">{t(source.data_freshness)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Stream Latency:</span>
-                <span className="text-white">{source.latency_minutes} Minutes</span>
+                <span className="text-gray-400">{t('Stream Latency:')}</span>
+                <span className="text-white">{source.latency_minutes} {t('Minutes')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Coverage Domain:</span>
-                <span className="text-gray-300 truncate max-w-[200px]" title={source.coverage_area}>
-                  {source.coverage_area}
+                <span className="text-gray-400">{t('Coverage Domain:')}</span>
+                <span className="text-gray-300 truncate max-w-[200px]" title={t(source.coverage_area)}>
+                  {t(source.coverage_area)}
                 </span>
               </div>
             </div>
@@ -91,10 +93,10 @@ export const DataSourcesPage: React.FC = () => {
         <div>
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Upload className="w-4 h-4 text-purple-400" />
-            <span>Local Dataset File Upload Adapter (CSV / JSON / NetCDF)</span>
+            <span>{t('Local Dataset File Upload Adapter (CSV / JSON / NetCDF)')}</span>
           </h3>
           <p className="text-xs text-gray-400 mt-0.5">
-            Ingest custom ground station readings or historical radar NetCDF grids directly into the Nowcasting pipeline.
+            {t('Ingest custom ground station readings or historical radar NetCDF grids directly into the Nowcasting pipeline.')}
           </p>
         </div>
 
@@ -102,7 +104,7 @@ export const DataSourcesPage: React.FC = () => {
           <HardDrive className="w-8 h-8 text-purple-400 mx-auto" />
           <div className="text-xs text-gray-300">
             <label className="cursor-pointer text-purple-400 hover:underline font-bold">
-              Click to select file
+              {t('Click to select file')}
               <input
                 type="file"
                 accept=".csv,.json,.nc"
@@ -110,10 +112,10 @@ export const DataSourcesPage: React.FC = () => {
                 className="hidden"
               />
             </label>
-            <span className="text-gray-400"> or drag and drop local weather file (.csv, .json, .nc)</span>
+            <span className="text-gray-400">{t(' or drag and drop local weather file (.csv, .json, .nc)')}</span>
           </div>
           <p className="text-[11px] text-gray-500 font-mono">
-            Supported fields: timestamp, lat, lon, temp_c, humidity, pressure, dbz, rainfall_mm, cape
+            {t('Supported fields: timestamp, lat, lon, temp_c, humidity, pressure, dbz, rainfall_mm, cape')}
           </p>
         </div>
 

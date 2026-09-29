@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { HistoricalFrame } from '../types/weather';
 import { fetchHistory } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
+import { useTranslation } from '../i18n';
 import {
   Play,
   Pause,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 export const ReplayPage: React.FC = () => {
+  const { t } = useTranslation();
   const [frames, setFrames] = useState<HistoricalFrame[]>([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -80,7 +82,7 @@ export const ReplayPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex items-center space-x-3 text-purple-400 font-mono text-sm">
           <Activity className="w-6 h-6 animate-spin" />
-          <span>Loading Historical Bhopal Monsoon Replay...</span>
+          <span>{t('Loading Historical Bhopal Monsoon Replay...')}</span>
         </div>
       </div>
     );
@@ -137,10 +139,10 @@ export const ReplayPage: React.FC = () => {
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <History className="w-4 h-4 text-purple-400" />
-            <span>Historical Storm Event Replay Engine</span>
+            <span>{t('Historical Storm Event Replay Engine')}</span>
           </h2>
           <p className="text-xs text-gray-400">
-            Playback of Bhopal Monsoon Storm Event (12 Steps, 5-Min Intervals)
+            {t('Playback of Bhopal Monsoon Storm Event (12 Steps, 5-Min Intervals)')}
           </p>
         </div>
 
@@ -160,7 +162,7 @@ export const ReplayPage: React.FC = () => {
               onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
               disabled={currentStep <= 0}
               className="p-3 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white rounded-xl border border-gray-800 transition"
-              title="Step Back (-5 Min)"
+              title={t('Step Back (-5 Min)')}
             >
               <SkipBack className="w-5 h-5" />
             </button>
@@ -171,14 +173,14 @@ export const ReplayPage: React.FC = () => {
               }`}
             >
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current" />}
-              <span className="text-xs">{isPlaying ? 'PAUSE' : 'PLAY'}</span>
+              <span className="text-xs">{t(isPlaying ? 'PAUSE' : 'PLAY')}</span>
             </button>
 
             <button
               onClick={() => setCurrentStep((prev) => Math.min(frames.length - 1, prev + 1))}
               disabled={currentStep >= frames.length - 1}
               className="p-3 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white rounded-xl border border-gray-800 transition"
-              title="Step Forward (+5 Min)"
+              title={t('Step Forward (+5 Min)')}
             >
               <SkipForward className="w-5 h-5" />
             </button>
@@ -186,7 +188,7 @@ export const ReplayPage: React.FC = () => {
             <button
               onClick={() => { setCurrentStep(0); setIsPlaying(false); }}
               className="p-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl border border-gray-800 transition"
-              title="Reset Timeline"
+              title={t('Reset Timeline')}
             >
               <RotateCcw className="w-5 h-5" />
             </button>
@@ -194,13 +196,13 @@ export const ReplayPage: React.FC = () => {
 
           {/* Timestamp Display */}
           <div className="text-center font-mono">
-            <div className="text-xs text-gray-400">Replay Timestamp (Step {currentStep + 1} of {frames.length}):</div>
+            <div className="text-xs text-gray-400">{t('Replay Timestamp (Step')} {currentStep + 1} {t('of')} {frames.length}):</div>
             <div className="text-xl font-bold text-purple-300">{currentFrame.time_display}</div>
           </div>
 
           {/* Speed Toggles */}
           <div className="flex items-center space-x-1.5 bg-gray-900 p-1.5 rounded-lg border border-gray-800 text-xs">
-            <span className="text-gray-400 font-mono px-2">Speed:</span>
+            <span className="text-gray-400 font-mono px-2">{t('Speed:')}</span>
             {[1, 2, 5].map((speed) => (
               <button
                 key={speed}
@@ -218,10 +220,10 @@ export const ReplayPage: React.FC = () => {
             <button
               onClick={exportReplay}
               className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded hover:bg-slate-50"
-              title="Download all replay frames as CSV"
+              title={t('Download all replay frames as CSV')}
             >
               <Download className="w-4 h-4" />
-              <span>Export data</span>
+              <span>{t('Export data')}</span>
             </button>
 
         </div>
@@ -237,24 +239,24 @@ export const ReplayPage: React.FC = () => {
             className="w-full h-2.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-purple-400"
           />
           <div className="flex justify-between text-xs font-mono text-gray-400">
-            <span>Step 0 (T-60m)</span>
-            <span>Peak Intensity Phase</span>
-            <span>Step 11 (T-0m)</span>
+            <span>{t('Step 0 (T-60m)')}</span>
+            <span>{t('Peak Intensity Phase')}</span>
+            <span>{t('Step 11 (T-0m)')}</span>
           </div>
         </div>
       </div>
 
-      <section className="glass-card overflow-hidden" aria-label="Animated storm replay">
+      <section className="glass-card overflow-hidden" aria-label={t('Animated storm replay')}>
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-gray-800">
           <div>
-            <h3 className="text-sm font-bold text-gray-800">Storm track playback</h3>
+            <h3 className="text-sm font-bold text-gray-800">{t('Storm track playback')}</h3>
             <p className="text-xs text-gray-500">{currentFrame.time_display} · {mainObs.location.location_name}</p>
           </div>
           <div className="flex items-center gap-3 text-xs">
-            <span className="text-gray-500">Intensity</span>
+            <span className="text-gray-500">{t('Intensity')}</span>
             <span className="font-bold text-amber-800">{Math.round(currentFrame.storm_intensity_phase * 100)}%</span>
             <span className={`px-2 py-1 rounded-sm font-semibold ${forecastedThunderstorm ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}`}>
-              {forecastedThunderstorm ? 'Thunderstorm conditions' : 'Pre-storm conditions'}
+              {t(forecastedThunderstorm ? 'Thunderstorm conditions' : 'Pre-storm conditions')}
             </span>
           </div>
         </div>
@@ -264,7 +266,7 @@ export const ReplayPage: React.FC = () => {
             <path d="M0 48H760M0 104H760M0 160H760M0 216H760M100 0V280M220 0V280M340 0V280M460 0V280M580 0V280M700 0V280" className="replay-grid" />
             <path d="M0 211C102 178 164 231 244 194S386 199 465 147 615 148 760 81" className="replay-route" />
             <path d="M0 251C123 232 188 260 308 232S536 240 760 185" className="replay-waterway" />
-            <text x="18" y="26" className="replay-map-label">BHOPAL DISTRICT · HISTORICAL EVENT</text>
+            <text x="18" y="26" className="replay-map-label">{t('BHOPAL DISTRICT · HISTORICAL EVENT')}</text>
             <text x="28" y="195" className="replay-map-label replay-map-small">BAIRAGARH</text>
             <text x="328" y="137" className="replay-map-label replay-map-small">BHOPAL CENTRAL</text>
             <text x="610" y="83" className="replay-map-label replay-map-small">KOLAR</text>
@@ -281,13 +283,13 @@ export const ReplayPage: React.FC = () => {
             )}
             <g transform="translate(585 241)">
               <circle cx="0" cy="0" r="7" className="replay-storm-core" />
-              <text x="13" y="4" className="replay-legend-label">Storm core</text>
+              <text x="13" y="4" className="replay-legend-label">{t('Storm core')}</text>
               <circle cx="107" cy="0" r="5" className="replay-station" />
-              <text x="120" y="4" className="replay-legend-label">Weather station</text>
+              <text x="120" y="4" className="replay-legend-label">{t('Weather station')}</text>
             </g>
           </svg>
           <div className="replay-stage-footer">
-            <span>MONSOON EVENT · 5-MINUTE OBSERVATION STEPS</span>
+            <span>{t('MONSOON EVENT · 5-MINUTE OBSERVATION STEPS')}</span>
             <span>{currentStep + 1} / {frames.length}</span>
           </div>
         </div>
@@ -300,28 +302,28 @@ export const ReplayPage: React.FC = () => {
         <div className="glass-card p-5 space-y-4">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 pb-2 border-b border-gray-800">
             <Thermometer className="w-4 h-4 text-cyan-400" />
-            <span>Replay Atmospheric State</span>
+            <span>{t('Replay Atmospheric State')}</span>
           </h3>
 
           <div className="space-y-3 text-xs font-mono">
             <div className="flex justify-between bg-gray-900/60 p-2.5 rounded border border-gray-800">
-              <span className="text-gray-400">Temperature:</span>
+              <span className="text-gray-400">{t('Temperature:')}</span>
               <span className="text-white font-bold">{mainObs.temperature_c}°C</span>
             </div>
             <div className="flex justify-between bg-gray-900/60 p-2.5 rounded border border-gray-800">
-              <span className="text-gray-400">Humidity:</span>
+              <span className="text-gray-400">{t('Humidity:')}</span>
               <span className="text-white font-bold">{mainObs.humidity_pct}%</span>
             </div>
             <div className="flex justify-between bg-gray-900/60 p-2.5 rounded border border-gray-800">
-              <span className="text-gray-400">Radar Reflectivity:</span>
+              <span className="text-gray-400">{t('Radar Reflectivity:')}</span>
               <span className="text-yellow-400 font-bold">{mainObs.radar_reflectivity_dbz} dBZ</span>
             </div>
             <div className="flex justify-between bg-gray-900/60 p-2.5 rounded border border-gray-800">
-              <span className="text-gray-400">Rainfall Rate:</span>
+              <span className="text-gray-400">{t('Rainfall Rate:')}</span>
               <span className="text-blue-400 font-bold">{mainObs.rainfall_mm_hr} mm/h</span>
             </div>
             <div className="flex justify-between bg-gray-900/60 p-2.5 rounded border border-gray-800">
-              <span className="text-gray-400">Lightning Strikes:</span>
+              <span className="text-gray-400">{t('Lightning Strikes:')}</span>
               <span className="text-purple-400 font-bold">{mainObs.lightning_flashes_count} flashes</span>
             </div>
           </div>
@@ -331,13 +333,13 @@ export const ReplayPage: React.FC = () => {
         <div className="glass-card p-5 space-y-4">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 pb-2 border-b border-gray-800">
             <Zap className="w-4 h-4 text-yellow-400" />
-            <span>Forecast Prediction State</span>
+            <span>{t('Forecast Prediction State')}</span>
           </h3>
 
           <div className="space-y-3 text-xs">
             <div>
               <div className="flex justify-between text-gray-400 mb-1">
-                <span>Storm Intensity Phase:</span>
+                <span>{t('Storm Intensity Phase:')}</span>
                 <span className="font-mono text-purple-400 font-bold">{(currentFrame.storm_intensity_phase * 100).toFixed(0)}%</span>
               </div>
               <div className="w-full bg-gray-800 rounded-full h-2">
@@ -350,15 +352,15 @@ export const ReplayPage: React.FC = () => {
 
             <div className="p-3 bg-gray-900/80 rounded border border-gray-800 space-y-2 font-mono">
               <div className="flex justify-between">
-                <span>Thunderstorm Predicted:</span>
+                <span>{t('Thunderstorm Predicted:')}</span>
                 <span className={`font-bold ${forecastedThunderstorm ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {forecastedThunderstorm ? 'YES (HIGH RISK)' : 'NO (LOW)'}
+                  {t(forecastedThunderstorm ? 'YES (HIGH RISK)' : 'NO (LOW)')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Heavy Rain Predicted:</span>
+                <span>{t('Heavy Rain Predicted:')}</span>
                 <span className={`font-bold ${mainObs.rainfall_mm_hr! > 25 ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {mainObs.rainfall_mm_hr! > 25 ? 'YES' : 'NO'}
+                  {t(mainObs.rainfall_mm_hr! > 25 ? 'YES' : 'NO')}
                 </span>
               </div>
             </div>
@@ -369,21 +371,21 @@ export const ReplayPage: React.FC = () => {
         <div className="glass-card p-5 space-y-4 border-l-4 border-l-cyan-500">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 pb-2 border-b border-gray-800">
             <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-            <span>Ground-Truth Verification</span>
+            <span>{t('Ground-Truth Verification')}</span>
           </h3>
 
           <div className="space-y-3 text-xs font-mono">
             <div className="p-3 bg-gray-900/80 rounded border border-gray-800 space-y-2">
               <div className="flex justify-between">
-                <span>Actual Thunderstorm:</span>
+                <span>{t('Actual Thunderstorm:')}</span>
                 <span className="font-bold text-white">
-                  {groundTruth.thunderstorm_occurred ? 'OCCURRED' : 'NONE'}
+                  {t(groundTruth.thunderstorm_occurred ? 'OCCURRED' : 'NONE')}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Actual Lightning Strikes:</span>
+                <span>{t('Actual Lightning Strikes:')}</span>
                 <span className="font-bold text-white">
-                  {groundTruth.lightning_occurred ? 'RECORDED' : 'NONE'}
+                  {t(groundTruth.lightning_occurred ? 'RECORDED' : 'NONE')}
                 </span>
               </div>
             </div>
@@ -400,9 +402,9 @@ export const ReplayPage: React.FC = () => {
                 <XCircle className="w-4 h-4 shrink-0 text-red-400" />
               )}
               <span>
-                {thunderstormCorrect
+                {t(thunderstormCorrect
                   ? 'Forecast Match — Predicted state matches ground truth.'
-                  : 'Forecast Variance — Prediction differed from ground observation.'}
+                  : 'Forecast Variance — Prediction differed from ground observation.')}
               </span>
             </div>
           </div>

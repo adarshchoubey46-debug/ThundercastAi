@@ -1,4 +1,5 @@
 import type { SourceType, DataQuality } from '../../types/weather';
+import { useTranslation } from '../../i18n';
 import { ShieldAlert, Database, Cpu, History, Eye } from 'lucide-react';
 
 interface ProvenanceBadgeProps {
@@ -13,6 +14,7 @@ export const ProvenanceBadge = ({
   sourceName,
   compact = false
 }: ProvenanceBadgeProps) => {
+  const { t } = useTranslation();
   let badgeClass = 'badge-provenance-observation';
   let icon = <ShieldAlert className="w-3.5 h-3.5 mr-1 text-amber-400" />;
   let label = 'DATA FEED';
@@ -44,7 +46,7 @@ export const ProvenanceBadge = ({
     return (
       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${badgeClass}`}>
         {icon}
-        {label}
+        {t(label)}
       </span>
     );
   }
@@ -53,7 +55,7 @@ export const ProvenanceBadge = ({
     <div className="inline-flex flex-wrap items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-900/80 border border-gray-800">
       <span className={`inline-flex items-center px-2 py-0.5 rounded ${badgeClass}`}>
         {icon}
-        {label}
+        {t(label)}
       </span>
       {sourceName && (
         <span className="text-gray-400 text-[11px] truncate max-w-[180px]" title={sourceName}>

@@ -13,6 +13,7 @@ import {
   fetchDataSources
 } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
+import { useTranslation } from '../i18n';
 import {
   CloudLightning,
   CloudRain,
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 
 export const OverviewPage: React.FC = () => {
+  const { t } = useTranslation();
   const prototypeMode = isPrototypeForecastMode();
   const [observations, setObservations] = useState<AtmosphericObservation[]>([]);
   const [forecastHours, setForecastHours] = useState<HourlyForecastPoint[]>([]);
@@ -69,7 +71,7 @@ export const OverviewPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex items-center space-x-3 text-cyan-400">
           <Activity className="w-6 h-6 animate-spin" />
-          <span className="text-sm font-mono">{forecastWaking ? 'Waking up server...' : 'Syncing Atmospheric Observations for Bhopal...'}</span>
+          <span className="text-sm font-mono">{forecastWaking ? t('Waking up server...') : t('Syncing Atmospheric Observations for Bhopal...')}</span>
         </div>
       </div>
     );
@@ -97,12 +99,12 @@ export const OverviewPage: React.FC = () => {
             <AlertOctagon className="w-6 h-6 text-red-500 shrink-0 mt-0.5 animate-bounce" />
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-bold text-red-400">{alerts[0].title}</h2>
+                <h2 className="text-sm font-bold text-red-400">{t(alerts[0].title)}</h2>
                 <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${getRiskClass(alerts[0].risk_level)}`}>
-                  {alerts[0].risk_level}
+                  {t(alerts[0].risk_level)}
                 </span>
               </div>
-              <p className="text-xs text-gray-300 mt-0.5">{alerts[0].affected_area} — {alerts[0].explanation}</p>
+              <p className="text-xs text-gray-300 mt-0.5">{t(alerts[0].affected_area)} — {t(alerts[0].explanation)}</p>
             </div>
           </div>
           <div className="shrink-0">
@@ -122,7 +124,7 @@ export const OverviewPage: React.FC = () => {
                 <Radio className="w-4 h-4 text-cyan-400" />
                 <span>Current Observation Summary</span>
               </h2>
-              <p className="text-xs text-gray-400">{mainObs?.location.location_name}</p>
+              <p className="text-xs text-gray-400">{t(mainObs?.location.location_name ?? '')}</p>
             </div>
             {mainObs && (
               <ProvenanceBadge sourceType={mainObs.source_type} sourceName={mainObs.source_name} compact />
@@ -134,37 +136,37 @@ export const OverviewPage: React.FC = () => {
               <div className="bg-gray-900/60 p-3 rounded-lg border border-gray-800/80">
                 <div className="flex items-center text-xs text-gray-400 space-x-1.5 mb-1">
                   <Thermometer className="w-4 h-4 text-amber-400" />
-                  <span>Temperature</span>
+                  <span>{t('Temperature')}</span>
                 </div>
                 <div className="text-lg font-bold text-white font-mono">{mainObs.temperature_c}°C</div>
-                <div className="text-[11px] text-gray-500">Dew Pt: {mainObs.dew_point_c}°C</div>
+                <div className="text-[11px] text-gray-500">{t('Dew Pt:')} {mainObs.dew_point_c}°C</div>
               </div>
 
               <div className="bg-gray-900/60 p-3 rounded-lg border border-gray-800/80">
                 <div className="flex items-center text-xs text-gray-400 space-x-1.5 mb-1">
                   <CloudRain className="w-4 h-4 text-blue-400" />
-                  <span>Rainfall Rate</span>
+                  <span>{t('Rainfall Rate')}</span>
                 </div>
                 <div className="text-lg font-bold text-cyan-400 font-mono">{mainObs.rainfall_mm_hr} mm/h</div>
-                <div className="text-[11px] text-gray-500">Radar: {mainObs.radar_reflectivity_dbz} dBZ</div>
+                <div className="text-[11px] text-gray-500">{t('Radar:')} {mainObs.radar_reflectivity_dbz} dBZ</div>
               </div>
 
               <div className="bg-gray-900/60 p-3 rounded-lg border border-gray-800/80">
                 <div className="flex items-center text-xs text-gray-400 space-x-1.5 mb-1">
                   <Zap className="w-4 h-4 text-yellow-400" />
-                  <span>Lightning Flashes</span>
+                  <span>{t('Lightning Flashes')}</span>
                 </div>
                 <div className="text-lg font-bold text-yellow-400 font-mono">{mainObs.lightning_flashes_count}</div>
-                <div className="text-[11px] text-gray-500">Past 15 mins</div>
+                <div className="text-[11px] text-gray-500">{t('Past 15 mins')}</div>
               </div>
 
               <div className="bg-gray-900/60 p-3 rounded-lg border border-gray-800/80">
                 <div className="flex items-center text-xs text-gray-400 space-x-1.5 mb-1">
                   <Wind className="w-4 h-4 text-teal-400" />
-                  <span>Wind Speed</span>
+                  <span>{t('Wind Speed')}</span>
                 </div>
                 <div className="text-lg font-bold text-white font-mono">{mainObs.wind_speed_kmh} km/h</div>
-                <div className="text-[11px] text-gray-500">Dir: {mainObs.wind_direction_deg}°</div>
+                <div className="text-[11px] text-gray-500">{t('Dir:')} {mainObs.wind_direction_deg}°</div>
               </div>
             </div>
           )}
@@ -172,12 +174,12 @@ export const OverviewPage: React.FC = () => {
           {/* Meteorological Indices Info */}
           <div className="p-3 bg-cyan-950/20 border border-cyan-800/40 rounded-lg text-xs space-y-1">
             <div className="flex justify-between font-mono">
-              <span className="text-gray-400">CAPE Instability:</span>
-              <span className="text-cyan-300 font-bold">{mainObs?.cape_jkg ? `${mainObs.cape_jkg} J/kg` : 'Unavailable / Sensor Absent'}</span>
+              <span className="text-gray-400">{t('CAPE Instability:')}</span>
+              <span className="text-cyan-300 font-bold">{mainObs?.cape_jkg ? `${mainObs.cape_jkg} J/kg` : t('Unavailable / Sensor Absent')}</span>
             </div>
             <div className="flex justify-between font-mono">
-              <span className="text-gray-400">K-Index Stability:</span>
-              <span className="text-cyan-300 font-bold">{mainObs?.k_index ? `${mainObs.k_index}` : 'Unavailable / Sensor Absent'}</span>
+              <span className="text-gray-400">{t('K-Index Stability:')}</span>
+              <span className="text-cyan-300 font-bold">{mainObs?.k_index ? `${mainObs.k_index}` : t('Unavailable / Sensor Absent')}</span>
             </div>
           </div>
         </div>
@@ -188,9 +190,9 @@ export const OverviewPage: React.FC = () => {
             <div>
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <CloudLightning className="w-4 h-4 text-cyan-400" />
-                <span>{prototypeMode ? 'Thunderstorm Outlook · Prototype Scenario' : 'Live Thunderstorm Outlook'}</span>
+                <span>{t(prototypeMode ? 'Thunderstorm Outlook · Prototype Scenario' : 'Live Thunderstorm Outlook')}</span>
               </h2>
-              <p className="text-xs text-gray-400">{prototypeMode ? 'Fixed sample values · not live weather · Bhopal' : 'Open-Meteo hourly forecast · Bhopal'}</p>
+              <p className="text-xs text-gray-400">{t(prototypeMode ? 'Fixed sample values · not live weather · Bhopal' : 'Open-Meteo hourly forecast · Bhopal')}</p>
             </div>
             {forecastHours.length > 0 && (
               <ProvenanceBadge sourceType="MODEL_PREDICTION" sourceName={prototypeMode ? 'Prototype forecast scenario' : 'Open-Meteo forecast'} compact />
@@ -207,14 +209,14 @@ export const OverviewPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-cyan-400 font-mono">{new Date(hour.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${getRiskClass(riskLevel)}`}>
-                    {riskLevel}
+                    {t(riskLevel)}
                   </span>
                 </div>
 
                 <div className="space-y-2 text-xs">
                   <div>
                     <div className="flex justify-between text-gray-400 mb-0.5">
-                      <span>Thunderstorm</span>
+                      <span>{t('Thunderstorm')}</span>
                       <span className="font-mono text-white font-bold">{hour.thunderstorm_probability}%</span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
@@ -227,7 +229,7 @@ export const OverviewPage: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between text-gray-400 mb-0.5">
-                      <span>Lightning Strike</span>
+                      <span>{t('Lightning Strike')}</span>
                       <span className="font-mono text-yellow-400 font-bold">{hour.lightning_probability}%</span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
@@ -240,7 +242,7 @@ export const OverviewPage: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between text-gray-400 mb-0.5">
-                      <span>Heavy Rain</span>
+                      <span>{t('Heavy Rain')}</span>
                       <span className="font-mono text-blue-400 font-bold">{hour.heavy_rain_probability}%</span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
@@ -253,7 +255,7 @@ export const OverviewPage: React.FC = () => {
                 </div>
 
                 <div className="pt-2 border-t border-gray-800 flex justify-between text-[11px] text-gray-500 font-mono">
-                  <span>CAPE / rain:</span>
+                  <span>{t('CAPE / rain:')}</span>
                   <span className="text-gray-300 font-bold">{hour.cape_jkg ?? 'N/A'} J/kg · {hour.precipitation_mm ?? 'N/A'} mm</span>
                 </div>
               </div>
@@ -261,10 +263,10 @@ export const OverviewPage: React.FC = () => {
             })}
           </div>
 
-          {forecastUnavailable && <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">Live weather data is temporarily unavailable. Please retry later.</p>}
-          {forecastWaking && <p role="status" className="text-xs text-amber-700">Waking up server… retrying forecast request.</p>}
+          {forecastUnavailable && <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">{t('Live weather data is temporarily unavailable. Please retry later.')}</p>}
+          {forecastWaking && <p role="status" className="text-xs text-amber-700">{t('Waking up server… retrying forecast request.')}</p>}
           <div className="p-3 bg-gray-950/60 rounded-lg text-xs text-gray-400 border border-gray-800">
-            {prototypeMode ? 'Prototype scenario only. Values are predefined for presentation and are not current weather, calibrated probabilities, or official warnings.' : 'Thunderstorm and lightning values are derived risk indicators from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes. They are not calibrated probabilities or official warnings.'}
+            {t(prototypeMode ? 'Prototype scenario only. Values are predefined for presentation and are not current weather, calibrated probabilities, or official warnings.' : 'Thunderstorm and lightning values are derived risk indicators from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes. They are not calibrated probabilities or official warnings.')}
           </div>
         </div>
 
@@ -274,24 +276,24 @@ export const OverviewPage: React.FC = () => {
       <div className="glass-card p-5 space-y-4">
         <h2 className="text-sm font-bold text-white flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Meteorological Data Feed Operational Health</span>
+          <span>{t('Meteorological Data Feed Operational Health')}</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {dataSources.map((ds) => (
             <div key={ds.source_id} className="p-3 bg-gray-900/60 rounded-lg border border-gray-800 text-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white truncate max-w-[160px]">{ds.source_name}</span>
+                <span className="font-bold text-white truncate max-w-[160px]">{t(ds.source_name)}</span>
                 <span className={`px-2 py-0.5 text-[10px] font-mono rounded ${
                   ds.status === 'OPERATIONAL' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
                 }`}>
-                  {ds.status}
+                  {t(ds.status)}
                 </span>
               </div>
-              <p className="text-gray-400 text-[11px]">{ds.type}</p>
+              <p className="text-gray-400 text-[11px]">{t(ds.type)}</p>
               <div className="flex justify-between text-gray-500 text-[10px] font-mono border-t border-gray-800 pt-1">
-                <span>Latency: {ds.latency_minutes}m</span>
-                <span className="text-cyan-400">{ds.data_freshness}</span>
+                <span>{t('Latency:')} {ds.latency_minutes}m</span>
+                <span className="text-cyan-400">{t(ds.data_freshness)}</span>
               </div>
             </div>
           ))}

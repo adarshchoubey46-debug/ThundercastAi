@@ -8,6 +8,7 @@ import { AlertsPage } from './pages/AlertsPage';
 import { ReplayPage } from './pages/ReplayPage';
 import { PerformancePage } from './pages/PerformancePage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
+import { DashboardLanguageContext, translate } from './i18n';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('overview');
@@ -19,24 +20,26 @@ export function App() {
   }, [language]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} language={language} setLanguage={setLanguage} />
+    <DashboardLanguageContext.Provider value={language}>
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+        <Header activeTab={activeTab} setActiveTab={setActiveTab} language={language} setLanguage={setLanguage} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {activeTab === 'overview' && <OverviewPage />}
-        {activeTab === 'map' && <MapPage />}
-        {activeTab === 'nowcast' && <NowcastPage />}
-        <AlertsPage active={activeTab === 'alerts'} />
-        {activeTab === 'replay' && <ReplayPage />}
-        {activeTab === 'performance' && <PerformancePage />}
-        {activeTab === 'sources' && <DataSourcesPage />}
-      </main>
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+          {activeTab === 'overview' && <OverviewPage />}
+          {activeTab === 'map' && <MapPage />}
+          {activeTab === 'nowcast' && <NowcastPage />}
+          <AlertsPage active={activeTab === 'alerts'} />
+          {activeTab === 'replay' && <ReplayPage />}
+          {activeTab === 'performance' && <PerformancePage />}
+          {activeTab === 'sources' && <DataSourcesPage />}
+        </main>
 
-      <footer className="py-4 border-t border-gray-900 bg-white text-center text-xs text-gray-500">
-        {language === 'hi' ? 'मेघदूत · क्षेत्रीय मौसम सहायता · भोपाल, मध्य प्रदेश' : 'MeghDoot · Regional weather decision support · Bhopal, Madhya Pradesh'}
-      </footer>
-      <AssistantWidget language={language} onOpenSafety={() => setActiveTab('alerts')} />
-    </div>
+        <footer className="py-4 border-t border-gray-900 bg-white text-center text-xs text-gray-500">
+          {translate('MeghDoot · Regional weather decision support · Bhopal, Madhya Pradesh', language)}
+        </footer>
+        <AssistantWidget language={language} onOpenSafety={() => setActiveTab('alerts')} />
+      </div>
+    </DashboardLanguageContext.Provider>
   );
 }
 

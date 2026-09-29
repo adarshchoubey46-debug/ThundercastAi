@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from '../../i18n';
 import {
   Zap,
   LayoutDashboard,
@@ -19,6 +20,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, language, setLanguage }) => {
+  const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState<string>('');
 
   useEffect(() => {
@@ -30,13 +32,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, languag
   }, []);
 
   const navItems = [
-    { id: 'overview', label: language === 'hi' ? 'अवलोकन' : 'Overview', icon: LayoutDashboard },
-    { id: 'map', label: language === 'hi' ? 'मौसम मानचित्र' : 'Weather Map', icon: Map },
-    { id: 'nowcast', label: language === 'hi' ? 'मौसम पूर्वानुमान' : 'Nowcasting', icon: Clock },
-    { id: 'alerts', label: language === 'hi' ? 'चेतावनी और जोखिम' : 'Alerts & Risks', icon: Bell },
-    { id: 'replay', label: language === 'hi' ? 'पुराना मौसम' : 'Historical Replay', icon: RotateCcw },
-    { id: 'performance', label: language === 'hi' ? 'मॉडल मेट्रिक्स' : 'Model Metrics', icon: BarChart2 },
-    { id: 'sources', label: language === 'hi' ? 'डेटा स्रोत' : 'Data Sources', icon: Database },
+    { id: 'overview', label: t('Overview'), icon: LayoutDashboard },
+    { id: 'map', label: t('Weather Map'), icon: Map },
+    { id: 'nowcast', label: t('Nowcasting'), icon: Clock },
+    { id: 'alerts', label: t('Alerts & Risks'), icon: Bell },
+    { id: 'replay', label: t('Historical Replay'), icon: RotateCcw },
+    { id: 'performance', label: t('Model Metrics'), icon: BarChart2 },
+    { id: 'sources', label: t('Data Sources'), icon: Database },
   ];
 
   return (
@@ -44,8 +46,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, languag
       <header className="sticky top-0 z-50 glass-nav border-b">
         <div className="border-b border-gray-800 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3 text-[11px] text-gray-500">
-            <span>Severe weather early-warning system · Bhopal, Madhya Pradesh</span>
-            <span className="hidden sm:inline">Coordinates: 23.2599°N, 77.4126°E</span>
+            <span>{t('Severe weather early-warning system · Bhopal, Madhya Pradesh')}</span>
+            <span className="hidden sm:inline">{t('Coordinates:')} 23.2599°N, 77.4126°E</span>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -55,13 +57,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, languag
             </div>
             <div>
               <h1 className="text-xl leading-tight font-bold text-[#12345a]">MeghDoot</h1>
-              <p className="text-xs text-gray-500">Regional Weather Intelligence Dashboard</p>
+              <p className="text-xs text-gray-500">{t('Regional Weather Intelligence Dashboard')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs">
             <div className="hidden md:block text-right text-gray-500">
-              <div className="font-semibold text-gray-700">{language === 'hi' ? 'सिस्टम समय' : 'System time'}</div>
-              <div>{currentTime || 'Syncing...'}</div>
+              <div className="font-semibold text-gray-700">{t('System time')}</div>
+              <div>{currentTime || t('Syncing...')}</div>
             </div>
             <div role="group" aria-label="Dashboard language" className="inline-flex items-center border border-gray-300 rounded-sm p-0.5 bg-white">
               <Languages className="w-4 h-4 ml-1.5 text-[#175a91]" aria-hidden="true" />
