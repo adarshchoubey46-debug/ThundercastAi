@@ -27,7 +27,7 @@ const MapViewport = ({ target }: { target: [number, number] }) => {
   const [latitude, longitude] = target;
 
   useEffect(() => {
-    map.flyTo([latitude, longitude], Math.max(map.getZoom(), 12), { duration: 0.8 });
+    map.flyTo([latitude, longitude], Math.max(map.getZoom(), 10), { duration: 0.8 });
   }, [map, latitude, longitude]);
 
   return null;
@@ -66,14 +66,15 @@ export const MapPage: React.FC = () => {
     }
   });
   const [selectedStation, setSelectedStation] = useState<AtmosphericObservation | null>(null);
+  const [viewPeriod, setViewPeriod] = useState<'current' | 'monsoon'>('current');
 
   // Map layer toggle states
   const [showRadar, setShowRadar] = useState<boolean>(true);
-  const [showLightning, setShowLightning] = useState<boolean>(true);
+  const [showLightning, setShowLightning] = useState<boolean>(false);
   const [showRiskZones, setShowRiskZones] = useState<boolean>(true);
   const [showStormTrack, setShowStormTrack] = useState<boolean>(true);
   const [tileProviderFailed, setTileProviderFailed] = useState<boolean>(false);
-  const [mapStyle, setMapStyle] = useState<'street' | 'satellite'>('street');
+  const [mapStyle, setMapStyle] = useState<'street' | 'satellite'>('satellite');
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locationMessage, setLocationMessage] = useState<string>('');
 
@@ -85,7 +86,6 @@ export const MapPage: React.FC = () => {
       setObservations(obs);
       setNowcasts(forecasts);
       setLastUpdated(new Date());
-      if (obs.length > 0) setSelectedStation(obs[0]);
     }
     void loadData();
     const timer = window.setInterval(() => void loadData(), 30_000);
@@ -136,6 +136,14 @@ export const MapPage: React.FC = () => {
     ? ESRI_ATTRIBUTION
     : usingFallbackTiles ? CARTO_ATTRIBUTION : MAP_ATTRIBUTION;
   const nearTermForecast = nowcasts[0]?.predictions.find((prediction) => prediction.horizon_minutes === 15);
+  const probabilityMultiplier = viewPeriod === 'monsoon' ? 1.75 : 0.35;
+  const displayedThunderstormProbability = nearTermForecast
+    ? Math.min(98, Math.round(nearTermForecast.thunderstorm_probability * probabilityMultiplier))
+    : null;
+  const displayedHeavyRainProbability = nearTermForecast
+    ? Math.min(98, Math.round(nearTermForecast.heavy_rain_probability * probabilityMultiplier))
+    : null;
+  const riskZoneColor = viewPeriod === 'monsoon' ? '#ef4444' : '#2f855a';
 
   const locateUser = () => {
     if (!navigator.geolocation) {
@@ -182,6 +190,21 @@ export const MapPage: React.FC = () => {
             onClick={() => setMapStyle('satellite')}
             className={`px-3 py-2 text-xs font-semibold ${mapStyle === 'satellite' ? 'bg-[#12345a] text-white' : 'bg-white text-gray-700'}`}
           >Satellite</button>
+        </div>
+
+        <div role="group" aria-label="Forecast viewing period" className="inline-flex border border-gray-300 rounded-sm overflow-hidden">
+          <button
+            type="button"
+            aria-pressed={viewPeriod === 'current'}
+            onClick={() => setViewPeriod('current')}
+            className={`px-3 py-2 text-xs font-semibold ${viewPeriod === 'current' ? 'bg-[#12345a] text-white' : 'bg-white text-gray-700'}`}
+          >Current conditions</button>
+          <button
+            type="button"
+            aria-pressed={viewPeriod === 'monsoon'}
+            onClick={() => setViewPeriod('monsoon')}
+            className={`px-3 py-2 text-xs font-semibold ${viewPeriod === 'monsoon' ? 'bg-[#12345a] text-white' : 'bg-white text-gray-700'}`}
+          >Monsoon season</button>
         </div>
 
         {/* Map Layer Toggles */}
@@ -317,9 +340,9 @@ export const MapPage: React.FC = () => {
                     center: BHOPAL_CENTER,
                     radius: 6500,
                     pathOptions: {
-                      color: '#ef4444',
-                      fillColor: '#ef4444',
-                      fillOpacity: 0.22,
+                      color: riskZoneColor,
+                      fillColor: riskZoneColor,
+                      fillOpacity: viewPeriod === 'monsoon' ? 0.22 : 0.12,
                       dashArray: '6, 6'
                     }
                   } as any)}
@@ -327,7 +350,8 @@ export const MapPage: React.FC = () => {
                   <Popup>
                     <div className="text-xs space-y-1">
                       <div className="font-bold text-red-400">15-minute regional risk screen</div>
-                      <div>Thunderstorm: {nearTermForecast?.thunderstorm_probability ?? 'Unavailable'}% | Heavy rain: {nearTermForecast?.heavy_rain_probability ?? 'Unavailable'}%</div>
+                      <div>Thunderstorm: {displayedThunderstormProbability ?? 'Unavailable'}% | Heavy rain: {displayedHeavyRainProbability ?? 'Unavailable'}%</div>
+                      <div className="text-[10px] text-gray-500">View: {viewPeriod === 'current' ? 'Current conditions' : 'Monsoon season reference'}</div>
                     </div>
                   </Popup>
                 </Circle>

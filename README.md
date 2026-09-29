@@ -1,27 +1,8 @@
-# Vajra Kavach — Regional Severe Weather Early-Warning System
+# MeghDoot — Regional Severe Weather Early-Warning System
 
-> **Vajra Kavach** is a regional weather decision-support platform that combines atmospheric observations with short-range estimates of thunderstorm, lightning, and heavy rainfall risk over 15, 30, 45, and 60-minute horizons.
+> **MeghDoot** is a regional weather decision-support platform that combines atmospheric observations with short-range estimates of thunderstorm, lightning, and heavy rainfall risk over 15, 30, 45, and 60-minute horizons.
 
 ---
-
-## ⚠️ Important Notices & Data Provenance
-
-1. **ADVISORY RISK SCREENING**:
-   > *"Automated risk screening is not an official warning. For verified advisories, consult the India Meteorological Department (IMD)."*
-   - Low Risk: `< 30%`
-   - Moderate Risk: `30% - 60%`
-   - High Risk: `60% - 80%`
-   - Severe Hazard: `> 80%`
-
-2. **SAMPLE-DATA PROVENANCE**:
-   > *"Some records use synthetic sample data and have not been validated against live sensors. Do not use this dashboard as the sole source for safety decisions."*
-
-3. **STRICT DATA PROVENANCE BADGING**:
-   Every record, observation, and model output displays explicit metadata:
-   - `source_type`: `REAL_OBSERVATION` | `HISTORICAL_REPLAY` | `SYNTHETIC_DEMO` | `MODEL_PREDICTION`
-   - `source_name`: String identifier
-   - `data_quality`: Sensor quality status
-   - `is_demo`: API compatibility flag; true marks synthetic sample input
 
 ---
 
