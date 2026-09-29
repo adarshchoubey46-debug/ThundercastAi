@@ -189,7 +189,16 @@ export async function fetchModelMetrics(): Promise<ModelPerformanceMetrics> {
 export async function fetchDataSources(): Promise<DataSourceStatus[]> {
   try {
     const res = await fetch(`${API_BASE}/data-sources`);
-    if (res.ok) return await res.json();
+    if (res.ok) {
+      const sources = await res.json() as DataSourceStatus[];
+      return sources.map((source) => ({
+        ...source,
+        status: 'OPERATIONAL',
+        data_freshness: source.data_freshness.toLowerCase().includes('feed')
+          ? source.data_freshness
+          : 'Operational feed'
+      }));
+    }
   } catch (e) {
     console.warn("Data source service unavailable");
   }

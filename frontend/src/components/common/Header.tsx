@@ -8,15 +8,18 @@ import {
   RotateCcw,
   BarChart2,
   Database,
-  ShieldCheck
+  ShieldCheck,
+  Languages
 } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  language: 'en' | 'hi';
+  setLanguage: (language: 'en' | 'hi') => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, language, setLanguage }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
 
   useEffect(() => {
@@ -28,14 +31,14 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
   }, []);
 
   const navItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'map', label: 'Weather Map', icon: Map },
-    { id: 'nowcast', label: 'Nowcasting', icon: Clock },
-    { id: 'alerts', label: 'Alerts & Risks', icon: Bell },
-    { id: 'replay', label: 'Historical Replay', icon: RotateCcw },
-    { id: 'performance', label: 'Model Metrics', icon: BarChart2 },
-    { id: 'sources', label: 'Data Sources', icon: Database },
-    { id: 'safety', label: 'Safety & Shelters', icon: ShieldCheck },
+    { id: 'overview', label: language === 'hi' ? 'अवलोकन' : 'Overview', icon: LayoutDashboard },
+    { id: 'map', label: language === 'hi' ? 'मौसम मानचित्र' : 'Weather Map', icon: Map },
+    { id: 'nowcast', label: language === 'hi' ? 'मौसम पूर्वानुमान' : 'Nowcasting', icon: Clock },
+    { id: 'alerts', label: language === 'hi' ? 'चेतावनी और जोखिम' : 'Alerts & Risks', icon: Bell },
+    { id: 'replay', label: language === 'hi' ? 'पुराना मौसम' : 'Historical Replay', icon: RotateCcw },
+    { id: 'performance', label: language === 'hi' ? 'मॉडल मेट्रिक्स' : 'Model Metrics', icon: BarChart2 },
+    { id: 'sources', label: language === 'hi' ? 'डेटा स्रोत' : 'Data Sources', icon: Database },
+    { id: 'safety', label: language === 'hi' ? 'सुरक्षा और आश्रय' : 'Safety & Shelters', icon: ShieldCheck },
   ];
 
   return (
@@ -59,8 +62,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           </div>
           <div className="flex items-center gap-3 text-xs">
             <div className="hidden md:block text-right text-gray-500">
-              <div className="font-semibold text-gray-700">System time</div>
+              <div className="font-semibold text-gray-700">{language === 'hi' ? 'सिस्टम समय' : 'System time'}</div>
               <div>{currentTime || 'Syncing...'}</div>
+            </div>
+            <div role="group" aria-label="Dashboard language" className="inline-flex items-center border border-gray-300 rounded-sm p-0.5 bg-white">
+              <Languages className="w-4 h-4 ml-1.5 text-[#175a91]" aria-hidden="true" />
+              <button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')} className={`px-2 py-1.5 rounded-sm font-semibold ${language === 'en' ? 'bg-[#12345a] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>English</button>
+              <button type="button" aria-pressed={language === 'hi'} onClick={() => setLanguage('hi')} className={`px-2 py-1.5 rounded-sm font-semibold ${language === 'hi' ? 'bg-[#12345a] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>हिंदी</button>
             </div>
           </div>
         </div>
