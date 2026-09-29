@@ -69,12 +69,43 @@ export interface WeatherRiskForecast {
   latitude: number;
   longitude: number;
   season_context: string;
-  generated_at_utc: string;
+  generated_at_utc: string | null;
   cached: boolean;
   stale: boolean;
+  latency_ms: number | null;
+  api_status: string;
+  last_error: string | null;
   message: string;
   disclaimer: string;
   hours: ThunderstormHour[];
+}
+
+export interface DataFeedHealth {
+  source_id: string;
+  source_name: string;
+  kind: string;
+  status: 'LIVE / HEALTHY' | 'STALE' | 'OFFLINE' | 'DEMO / SIMULATED' | 'NOT CONNECTED';
+  last_update: string | null;
+  data_age_seconds: number | null;
+  latency_ms: number | null;
+  latency_scope: string | null;
+  coverage_area: string;
+  products: string[];
+  latest_record: string | null;
+  api_status: string;
+  last_error: string | null;
+  health_score_pct: number | null;
+  confirmation: string;
+  simulated: boolean;
+}
+
+export interface DataPipelineHealth {
+  overall_status: 'HEALTHY' | 'STALE' | 'OFFLINE' | 'DEMO / SIMULATED';
+  overall_health_pct: number | null;
+  fresh_threshold_seconds: number;
+  stale_threshold_seconds: number;
+  offline_threshold_seconds: number;
+  sources: DataFeedHealth[];
 }
 
 export interface Alert {
@@ -128,8 +159,8 @@ export interface DataSourceStatus {
   source_name: string;
   type: string;
   status: 'OPERATIONAL' | 'DEGRADED';
-  last_updated: string;
-  latency_minutes: number;
+  last_updated: string | null;
+  latency_minutes: number | null;
   data_freshness: string;
   coverage_area: string;
 }

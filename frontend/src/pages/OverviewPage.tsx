@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { startTransition, useEffect, useEffectEvent, useState } from 'react';
 import type {
   AtmosphericObservation,
   WeatherRiskForecast,
   Alert,
-  DataSourceStatus
+  DataPipelineHealth
 } from '../types/weather';
 import {
   fetchObservations,
   fetchWeatherRisk,
   fetchAlerts,
-  fetchDataSources
+  fetchDataFeedHealth
 } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
+import { DataFeedHealthSection } from '../components/common/DataFeedHealthSection';
 import {
   CloudLightning,
   CloudRain,
@@ -20,7 +21,6 @@ import {
   Zap,
   Activity,
   AlertOctagon,
-  ShieldCheck,
   Radio
 } from 'lucide-react';
 
@@ -28,26 +28,30 @@ export const OverviewPage: React.FC = () => {
   const [observations, setObservations] = useState<AtmosphericObservation[]>([]);
   const [weatherRisk, setWeatherRisk] = useState<WeatherRiskForecast | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [dataSources, setDataSources] = useState<DataSourceStatus[]>([]);
+  const [dataHealth, setDataHealth] = useState<DataPipelineHealth | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      const [obsData, weatherRiskData, alertData, sourcesData] = await Promise.all([
-        fetchObservations(),
-        fetchWeatherRisk(),
-        fetchAlerts(),
-        fetchDataSources()
-      ]);
+  const loadData = useEffectEvent(async () => {
+    const obsData = await fetchObservations();
+    const [weatherRiskData, alertData, healthData] = await Promise.all([
+      fetchWeatherRisk(),
+      fetchAlerts(),
+      fetchDataFeedHealth()
+    ]);
+    startTransition(() => {
       setObservations(obsData);
       setWeatherRisk(weatherRiskData);
       setAlerts(alertData);
-      setDataSources(sourcesData);
+      setDataHealth(healthData);
       setLoading(false);
-    }
-    loadData();
-  }, []);
+    });
+  });
+
+  async function retryDataHealth() {
+    setDataHealth(await fetchDataFeedHealth());
+  }
+
+  useEffect(() => { void loadData(); }, []);
 
   if (loading) {
     return (
@@ -211,33 +215,7 @@ export const OverviewPage: React.FC = () => {
 
       </div>
 
-      {/* Bottom Section: Data Source Health Grid */}
-      <div className="glass-card p-5 space-y-4">
-        <h2 className="text-sm font-bold text-white flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Meteorological Data Feed Operational Health</span>
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {dataSources.map((ds) => (
-            <div key={ds.source_id} className="p-3 bg-gray-900/60 rounded-lg border border-gray-800 text-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-white truncate max-w-[160px]">{ds.source_name}</span>
-                <span className={`px-2 py-0.5 text-[10px] font-mono rounded ${
-                  ds.status === 'OPERATIONAL' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
-                }`}>
-                  {ds.status}
-                </span>
-              </div>
-              <p className="text-gray-400 text-[11px]">{ds.type}</p>
-              <div className="flex justify-between text-gray-500 text-[10px] font-mono border-t border-gray-800 pt-1">
-                <span>Latency: {ds.latency_minutes}m</span>
-                <span className="text-cyan-400">{ds.data_freshness}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <DataFeedHealthSection health={dataHealth} onRetry={() => void retryDataHealth()} />
 
     </div>
   );

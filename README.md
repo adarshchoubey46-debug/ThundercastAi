@@ -91,6 +91,8 @@ python -m uvicorn app.main:app --reload --port 8000
 
 The hourly outlook uses Open-Meteo by default and caches normalized responses in process memory for 15 minutes. Provider requests have a 3-second timeout. If a request fails, the API returns a last cached response when available, otherwise an explicit unavailable result; it does not replace missing live data with synthetic storm probabilities.
 
+`GET /api/data-feed-health` reports measured response age/latency for the connected weather provider and labels local observation-generator outputs as `DEMO / SIMULATED`; sources without an adapter are `NOT CONNECTED`. Fresh/stale/offline thresholds are configurable with `DATA_HEALTH_FRESH_THRESHOLD_SECONDS` (default 180), `DATA_HEALTH_STALE_THRESHOLD_SECONDS` (default 900), and `DATA_HEALTH_OFFLINE_THRESHOLD_SECONDS` (default 1800). Pipeline percentages are derived from response age and are omitted for demo/unconnected sources.
+
 Configure `WEATHER_PROVIDER` as one of `open_meteo` (default), `openweather`, `weatherapi`, or `tomorrow`. For paid providers, set the matching secret in the backend environment only:
 
 | Provider | Environment secret | Thunderstorm fields used |

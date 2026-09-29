@@ -36,12 +36,22 @@ def _clamp_percent(value: float | None) -> float | None:
     return None if value is None else round(max(0.0, min(100.0, value)), 1)
 
 
+def _parse_forecast_time(value: str) -> datetime | None:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
 def _convective_potential(cape: float | None, convective_precipitation: float | None, storm_code: bool = False) -> float | None:
     if cape is None and convective_precipitation is None and not storm_code:
         return None
     cape_score = min(max(cape or 0.0, 0.0) / 2000.0, 1.0) * 55.0
     precipitation_score = min(max(convective_precipitation or 0.0, 0.0) / 2.0, 1.0) * 30.0
-    storm_signal = 25.0 if storm_code else 0.0
+    storm_signal = 85.0 if storm_code else 0.0
     return _clamp_percent(max(cape_score + precipitation_score, storm_signal))
 
 
@@ -79,7 +89,7 @@ def normalize_openweather(payload: dict[str, Any]) -> list[dict[str, Any]]:
             rain_probability *= 100
         rain = hour.get("rain") or {}
         result.append({
-            "time": hour.get("dt_txt") or datetime.fromtimestamp(hour.get("dt", 0), timezone.utc).isoformat(),
+            "time": datetime.fromtimestamp(hour.get("dt", 0), timezone.utc).isoformat(),
             "thunderstorm_potential_pct": 85.0 if storm_code else (0.0 if code else None),
             "lightning_potential_pct": 85.0 if storm_code else (0.0 if code else None),
             "precipitation_probability_pct": _clamp_percent(rain_probability),
@@ -105,9 +115,9 @@ def normalize_weatherapi(payload: dict[str, Any]) -> list[dict[str, Any]]:
             condition = hour.get("condition") or {}
             code = int(_number(condition.get("code")) or 0)
             is_thunder = code in (1087, 1273, 1276, 1279, 1282) or "thunder" in str(condition.get("text", "")).lower()
-            thunderstorm_signal = 85.0 if is_thunder or thunder_alert else (0.0 if code else None)
+            thunderstorm_signal = 85.0 if is_thunder else (0.0 if code else None)
             result.append({
-                "time": hour.get("time"),
+                "time": datetime.fromtimestamp(hour.get("time_epoch"), timezone.utc).isoformat() if hour.get("time_epoch") else hour.get("time"),
                 "thunderstorm_potential_pct": thunderstorm_signal,
                 "lightning_potential_pct": thunderstorm_signal,
                 "precipitation_probability_pct": _clamp_percent(_number(hour.get("chance_of_rain"))),
@@ -151,7 +161,7 @@ def _provider_request(provider: str, latitude: float, longitude: float) -> tuple
             "latitude": str(latitude),
             "longitude": str(longitude),
             "hourly": "cape,showers,precipitation_probability,weather_code",
-            "forecast_days": "2",
+            "forecast_hours": "48",
             "timezone": "UTC",
         }
     if provider == "openweather":
@@ -194,12 +204,31 @@ async def _fetch_provider(provider: str, latitude: float, longitude: float) -> l
         "tomorrow": normalize_tomorrow,
     }
     normalized = normalizers[provider](payload)
+    current_hour = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    normalized = [
+        hour for hour in normalized
+        if (forecast_time := _parse_forecast_time(hour.get("time", ""))) is not None
+        and forecast_time >= current_hour
+    ][:MAX_FORECAST_HOURS]
     if not normalized:
         raise WeatherProviderError("Weather provider returned no hourly forecast data")
     return normalized
 
 
-def _response(provider: str, latitude: float, longitude: float, *, available: bool, hours: list[dict[str, Any]], message: str, cached: bool = False, stale: bool = False) -> dict[str, Any]:
+def _response(
+    provider: str,
+    latitude: float,
+    longitude: float,
+    *,
+    available: bool,
+    hours: list[dict[str, Any]],
+    message: str,
+    latency_ms: float | None = None,
+    api_status: str = "Not checked",
+    last_error: str | None = None,
+    cached: bool = False,
+    stale: bool = False,
+) -> dict[str, Any]:
     month = datetime.now(timezone.utc).month
     season = "July-August monsoon window" if month in (7, 8) else "Outside July-August monsoon window"
     return {
@@ -208,9 +237,12 @@ def _response(provider: str, latitude: float, longitude: float, *, available: bo
         "latitude": latitude,
         "longitude": longitude,
         "season_context": season,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(timezone.utc).isoformat() if available else None,
         "cached": cached,
         "stale": stale,
+        "latency_ms": latency_ms,
+        "api_status": api_status,
+        "last_error": last_error,
         "message": message,
         "disclaimer": "Thunderstorm potential is an indicator derived from provider forecast fields, not a calibrated probability or an official warning. Follow local authority and IMD alerts.",
         "hours": hours,
@@ -236,11 +268,22 @@ async def get_weather_risk(latitude: float, longitude: float) -> dict[str, Any]:
             cached_response["cached"] = True
             return cached_response
         try:
+            request_started = time.perf_counter()
             hours = await asyncio.wait_for(
                 _fetch_provider(provider, latitude, longitude),
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
-            result = _response(provider, latitude, longitude, available=True, hours=hours, message="Forecast data loaded")
+            latency_ms = round((time.perf_counter() - request_started) * 1000, 1)
+            result = _response(
+                provider,
+                latitude,
+                longitude,
+                available=True,
+                hours=hours,
+                message="Forecast data loaded",
+                latency_ms=latency_ms,
+                api_status="200 OK",
+            )
             for key, (stored_at, _) in list(_cache.items()):
                 if time.monotonic() - stored_at >= CACHE_TTL_SECONDS:
                     _cache.pop(key, None)
@@ -250,9 +293,29 @@ async def get_weather_risk(latitude: float, longitude: float) -> dict[str, Any]:
             return result
         except Exception as error:
             logger.warning("Weather provider request failed (%s): %s", provider, type(error).__name__)
+            latency_ms = round((time.perf_counter() - request_started) * 1000, 1)
+            if isinstance(error, httpx.HTTPStatusError):
+                api_status = f"HTTP {error.response.status_code}"
+                last_error = f"Provider returned HTTP {error.response.status_code}"
+            elif isinstance(error, (httpx.TimeoutException, asyncio.TimeoutError)):
+                api_status = "TIMEOUT"
+                last_error = "Provider request exceeded the configured timeout"
+            elif isinstance(error, WeatherProviderError):
+                api_status = "NOT CONFIGURED" if "not configured" in str(error).lower() else "NO DATA"
+                last_error = str(error)
+            else:
+                api_status = "REQUEST FAILED"
+                last_error = type(error).__name__
             if cached_entry:
                 stale_response = dict(cached_entry[1])
-                stale_response.update({"cached": True, "stale": True, "message": "Provider unavailable; showing the last cached forecast"})
+                stale_response.update({
+                    "cached": True,
+                    "stale": True,
+                    "message": "Provider unavailable; showing the last cached forecast",
+                    "latency_ms": latency_ms,
+                    "api_status": api_status,
+                    "last_error": last_error,
+                })
                 return stale_response
             return _response(
                 provider,
@@ -261,4 +324,7 @@ async def get_weather_risk(latitude: float, longitude: float) -> dict[str, Any]:
                 available=False,
                 hours=[],
                 message="Live weather data is temporarily unavailable. Please retry later and follow official local alerts.",
+                latency_ms=latency_ms,
+                api_status=api_status,
+                last_error=last_error,
             )

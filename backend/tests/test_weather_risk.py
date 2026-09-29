@@ -19,7 +19,7 @@ def test_open_meteo_normalizes_convective_fields():
 
     assert result[0]["cape_jkg"] == 1600
     assert result[0]["convective_precipitation_mm"] == 1.2
-    assert result[0]["thunderstorm_potential_pct"] == 62
+    assert result[0]["thunderstorm_potential_pct"] == 85
 
 
 def test_openweather_recognizes_thunderstorm_code_group():
@@ -46,6 +46,20 @@ def test_weatherapi_reads_conditions_and_severe_alerts():
     })
 
     assert result[0]["thunderstorm_potential_pct"] == 85
+    assert result[0]["condition"] == "Severe thunderstorm warning"
+
+
+def test_weatherapi_alert_does_not_inflate_clear_hour():
+    result = weather_risk.normalize_weatherapi({
+        "forecast": {"forecastday": [{"hour": [{
+            "time": "2026-07-15 12:00",
+            "time_epoch": 1784116800,
+            "condition": {"code": 1000, "text": "Clear"},
+        }]}]},
+        "alerts": {"alert": [{"headline": "Severe thunderstorm warning"}]},
+    })
+
+    assert result[0]["thunderstorm_potential_pct"] == 0
     assert result[0]["condition"] == "Severe thunderstorm warning"
 
 
