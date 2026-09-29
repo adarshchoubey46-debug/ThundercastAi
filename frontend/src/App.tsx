@@ -13,7 +13,6 @@ import { SafetyPage } from './pages/SafetyPage';
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [language, setLanguage] = useState<'en' | 'hi'>(() => localStorage.getItem('meghdoot-language') === 'hi' ? 'hi' : 'en');
-  const [forecastMode, setForecastMode] = useState<'live' | 'monsoon'>('live');
 
   useEffect(() => {
     document.documentElement.lang = language === 'hi' ? 'hi' : 'en';
@@ -22,12 +21,12 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} language={language} setLanguage={setLanguage} forecastMode={forecastMode} setForecastMode={setForecastMode} />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} language={language} setLanguage={setLanguage} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {activeTab === 'overview' && <OverviewPage />}
         {activeTab === 'map' && <MapPage />}
-        {activeTab === 'nowcast' && <NowcastPage forecastMode={forecastMode} />}
+        {activeTab === 'nowcast' && <NowcastPage />}
         <AlertsPage active={activeTab === 'alerts'} />
         {activeTab === 'replay' && <ReplayPage />}
         {activeTab === 'performance' && <PerformancePage />}

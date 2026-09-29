@@ -1,18 +1,17 @@
-import React, { startTransition, useEffect, useEffectEvent, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type {
   AtmosphericObservation,
-  WeatherRiskForecast,
+  LocationNowcast,
   Alert,
-  DataPipelineHealth
+  DataSourceStatus
 } from '../types/weather';
 import {
   fetchObservations,
-  fetchWeatherRisk,
+  fetchNowcast,
   fetchAlerts,
-  fetchDataFeedHealth
+  fetchDataSources
 } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
-import { DataFeedHealthSection } from '../components/common/DataFeedHealthSection';
 import {
   CloudLightning,
   CloudRain,
@@ -21,37 +20,34 @@ import {
   Zap,
   Activity,
   AlertOctagon,
+  ShieldCheck,
   Radio
 } from 'lucide-react';
 
 export const OverviewPage: React.FC = () => {
   const [observations, setObservations] = useState<AtmosphericObservation[]>([]);
-  const [weatherRisk, setWeatherRisk] = useState<WeatherRiskForecast | null>(null);
+  const [nowcasts, setNowcasts] = useState<LocationNowcast[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [dataHealth, setDataHealth] = useState<DataPipelineHealth | null>(null);
+  const [dataSources, setDataSources] = useState<DataSourceStatus[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const loadData = useEffectEvent(async () => {
-    const obsData = await fetchObservations();
-    const [weatherRiskData, alertData, healthData] = await Promise.all([
-      fetchWeatherRisk(),
-      fetchAlerts(),
-      fetchDataFeedHealth()
-    ]);
-    startTransition(() => {
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const [obsData, nowcastData, alertData, sourcesData] = await Promise.all([
+        fetchObservations(),
+        fetchNowcast(),
+        fetchAlerts(),
+        fetchDataSources()
+      ]);
       setObservations(obsData);
-      setWeatherRisk(weatherRiskData);
+      setNowcasts(nowcastData);
       setAlerts(alertData);
-      setDataHealth(healthData);
+      setDataSources(sourcesData);
       setLoading(false);
-    });
-  });
-
-  async function retryDataHealth() {
-    setDataHealth(await fetchDataFeedHealth());
-  }
-
-  useEffect(() => { void loadData(); }, []);
+    }
+    loadData();
+  }, []);
 
   if (loading) {
     return (
@@ -64,6 +60,7 @@ export const OverviewPage: React.FC = () => {
     );
   }
 
+  const primaryNowcast = nowcasts[0];
   const mainObs = observations[0];
 
   const getRiskClass = (level: string) => {
@@ -171,51 +168,117 @@ export const OverviewPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Col: Live provider forecast */}
+        {/* Right Col: Next 15, 30, 45, 60-Minute Forecast Cards */}
         <div className="glass-card p-5 space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between pb-3 border-b border-gray-800">
             <div>
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <CloudLightning className="w-4 h-4 text-cyan-400" />
-                <span>Live Thunderstorm Outlook</span>
+                <span>Multi-Horizon Nowcast Predictions</span>
               </h2>
-              <p className="text-xs text-gray-400">{weatherRisk?.provider.replaceAll('_', ' ') ?? 'Weather provider'} · next hourly forecasts</p>
+              <p className="text-xs text-gray-400">Model Version: {primaryNowcast?.model_version}</p>
             </div>
+            {primaryNowcast && (
+              <ProvenanceBadge sourceType={primaryNowcast.source_type} sourceName={primaryNowcast.source_name} compact />
+            )}
           </div>
 
-          {weatherRisk?.available ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {weatherRisk.hours.slice(0, 4).map((hour) => (
-                <div key={hour.time} className="rounded-sm border border-gray-800 bg-gray-900/60 p-3">
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{new Date(hour.time).toLocaleString()}</span>
-                    <span>{hour.condition ?? 'Forecast'}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {primaryNowcast?.predictions.map((pred) => (
+              <div
+                key={pred.horizon_minutes}
+                className="bg-gray-900/80 p-4 rounded-xl border border-gray-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-400 font-mono">+{pred.horizon_minutes} MIN</span>
+                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${getRiskClass(pred.risk_level)}`}>
+                    {pred.risk_level}
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <div className="flex justify-between text-gray-400 mb-0.5">
+                      <span>Thunderstorm</span>
+                      <span className="font-mono text-white font-bold">{pred.thunderstorm_probability}%</span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-cyan-500 h-1.5 rounded-full"
+                        style={{ width: `${pred.thunderstorm_probability}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-baseline justify-between gap-2">
-                    <span className="text-xs text-gray-500">Thunderstorm potential indicator</span>
-                    <strong className="font-mono text-[#175a91]">{hour.thunderstorm_potential_pct === null ? 'N/A' : `${hour.thunderstorm_potential_pct}%`}</strong>
+
+                  <div>
+                    <div className="flex justify-between text-gray-400 mb-0.5">
+                      <span>Lightning Strike</span>
+                      <span className="font-mono text-yellow-400 font-bold">{pred.lightning_probability}%</span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-yellow-400 h-1.5 rounded-full"
+                        style={{ width: `${pred.lightning_probability}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="mt-1 flex items-baseline justify-between gap-2 text-xs">
-                    <span className="text-gray-500">Precipitation chance</span>
-                    <strong className="font-mono text-sky-800">{hour.precipitation_probability_pct === null ? 'N/A' : `${hour.precipitation_probability_pct}%`}</strong>
+
+                  <div>
+                    <div className="flex justify-between text-gray-400 mb-0.5">
+                      <span>Heavy Rain</span>
+                      <span className="font-mono text-blue-400 font-bold">{pred.heavy_rain_probability}%</span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-blue-500 h-1.5 rounded-full"
+                        style={{ width: `${pred.heavy_rain_probability}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p role="status" className="rounded-sm border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              {weatherRisk?.message ?? 'Live forecast is unavailable. Numeric estimates are withheld; check official local alerts.'}
-            </p>
-          )}
 
-          <p className="rounded-sm border border-gray-800 bg-gray-950/60 p-3 text-xs text-gray-500">
-            {weatherRisk?.disclaimer ?? 'Thunderstorm potential is an indicator derived from forecast fields, not an official warning.'}
-          </p>
+                <div className="pt-2 border-t border-gray-800 flex justify-between text-[11px] text-gray-500 font-mono">
+                  <span>Confidence:</span>
+                  <span className="text-gray-300 font-bold">{(pred.confidence_score * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-3 bg-gray-950/60 rounded-lg text-xs text-gray-400 border border-gray-800 font-mono">
+            {primaryNowcast?.disclaimer}
+          </div>
         </div>
 
       </div>
 
-      <DataFeedHealthSection health={dataHealth} onRetry={() => void retryDataHealth()} />
+      {/* Bottom Section: Data Source Health Grid */}
+      <div className="glass-card p-5 space-y-4">
+        <h2 className="text-sm font-bold text-white flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <span>Meteorological Data Feed Operational Health</span>
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {dataSources.map((ds) => (
+            <div key={ds.source_id} className="p-3 bg-gray-900/60 rounded-lg border border-gray-800 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-white truncate max-w-[160px]">{ds.source_name}</span>
+                <span className={`px-2 py-0.5 text-[10px] font-mono rounded ${
+                  ds.status === 'OPERATIONAL' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
+                }`}>
+                  {ds.status}
+                </span>
+              </div>
+              <p className="text-gray-400 text-[11px]">{ds.type}</p>
+              <div className="flex justify-between text-gray-500 text-[10px] font-mono border-t border-gray-800 pt-1">
+                <span>Latency: {ds.latency_minutes}m</span>
+                <span className="text-cyan-400">{ds.data_freshness}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
     </div>
   );

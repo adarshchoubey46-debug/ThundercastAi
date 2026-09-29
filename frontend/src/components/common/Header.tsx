@@ -9,8 +9,7 @@ import {
   BarChart2,
   Database,
   ShieldCheck,
-  Languages,
-  CloudLightning
+  Languages
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -18,11 +17,9 @@ interface HeaderProps {
   setActiveTab: (tab: string) => void;
   language: 'en' | 'hi';
   setLanguage: (language: 'en' | 'hi') => void;
-  forecastMode: 'live' | 'monsoon';
-  setForecastMode: (mode: 'live' | 'monsoon') => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, language, setLanguage, forecastMode, setForecastMode }) => {
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, language, setLanguage }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
 
   useEffect(() => {
@@ -72,11 +69,6 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, languag
               <Languages className="w-4 h-4 ml-1.5 text-[#175a91]" aria-hidden="true" />
               <button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')} className={`px-2 py-1.5 rounded-sm font-semibold ${language === 'en' ? 'bg-[#12345a] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>English</button>
               <button type="button" aria-pressed={language === 'hi'} onClick={() => setLanguage('hi')} className={`px-2 py-1.5 rounded-sm font-semibold ${language === 'hi' ? 'bg-[#12345a] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>हिंदी</button>
-            </div>
-            <div role="group" aria-label="Forecast period" className="inline-flex items-center border border-gray-300 rounded-sm p-0.5 bg-white">
-              <CloudLightning className="w-4 h-4 ml-1.5 text-[#175a91]" aria-hidden="true" />
-              <button type="button" aria-pressed={forecastMode === 'live'} onClick={() => setForecastMode('live')} title="Use the current live forecast" className={`px-2 py-1.5 rounded-sm font-semibold ${forecastMode === 'live' ? 'bg-[#12345a] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>Live</button>
-              <button type="button" aria-pressed={forecastMode === 'monsoon'} onClick={() => setForecastMode('monsoon')} title="Show July-August monsoon context" className={`px-2 py-1.5 rounded-sm font-semibold ${forecastMode === 'monsoon' ? 'bg-[#12345a] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>Jul–Aug</button>
             </div>
           </div>
         </div>

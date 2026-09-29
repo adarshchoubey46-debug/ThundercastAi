@@ -6,8 +6,7 @@ from app.api.endpoints import (
     alerts,
     history,
     model,
-    data_sources,
-    weather_risk
+    data_sources
 )
 
 api_router = APIRouter()
@@ -19,4 +18,3 @@ api_router.include_router(alerts.router, tags=["Alerts"])
 api_router.include_router(history.router, tags=["History"])
 api_router.include_router(model.router, tags=["Model Metrics"])
 api_router.include_router(data_sources.router, tags=["Data Sources"])
-api_router.include_router(weather_risk.router, tags=["Weather Risk"])

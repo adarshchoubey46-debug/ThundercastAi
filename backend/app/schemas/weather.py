@@ -98,33 +98,7 @@ class DataSourceStatus(BaseModel):
     source_name: str
     type: str = Field(..., json_schema_extra={"example": "Doppler Weather Radar / Satellite / AWS"})
     status: str = Field(..., json_schema_extra={"example": "OPERATIONAL / DEGRADED"})
-    last_updated: Optional[str] = None
-    latency_minutes: Optional[int] = None
+    last_updated: str
+    latency_minutes: int
     data_freshness: str
     coverage_area: str
-
-class DataFeedHealth(BaseModel):
-    source_id: str
-    source_name: str
-    kind: str
-    status: str
-    last_update: Optional[str] = None
-    data_age_seconds: Optional[float] = None
-    latency_ms: Optional[float] = None
-    latency_scope: Optional[str] = None
-    coverage_area: str
-    products: List[str]
-    latest_record: Optional[str] = None
-    api_status: str
-    last_error: Optional[str] = None
-    health_score_pct: Optional[int] = None
-    confirmation: str
-    simulated: bool = False
-
-class DataPipelineHealth(BaseModel):
-    overall_status: str
-    overall_health_pct: Optional[int] = None
-    fresh_threshold_seconds: int
-    stale_threshold_seconds: int
-    offline_threshold_seconds: int
-    sources: List[DataFeedHealth]
