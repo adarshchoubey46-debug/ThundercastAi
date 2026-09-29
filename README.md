@@ -82,10 +82,15 @@ ThundercastAi/
 ```bash
 cd backend
 python -m pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 - Open Interactive Swagger API Docs: `http://localhost:8000/docs`
-- Health Endpoint: `http://localhost:8000/api/health`
+- Health Endpoint: `http://localhost:8000/health`
+- Forecast Endpoint: `http://localhost:8000/api/forecast?lat=23.2599&lon=77.4126&hours=6`
+
+Keep the backend terminal open while using the local frontend. Uvicorn exits when its terminal/process is stopped; Open-Meteo failures are returned as HTTP 502 and do not stop the server.
+
+For Render, set the service root directory to `backend`, build command to `pip install -r requirements.txt`, and start command to `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set `ALLOWED_ORIGINS` to a comma-separated list containing your exact Vercel origin and `http://localhost:5173`, for example `https://your-app.vercel.app,http://localhost:5173`.
 
 ### 2. Run Backend Pytest Suite
 
@@ -102,6 +107,7 @@ npm install
 npm run dev
 ```
 - Open Web Application: `http://localhost:5173`
+- Set `VITE_API_URL` in `frontend/.env.local` to the FastAPI base URL (local default: `http://localhost:8000`; deployed value: your Render service URL).
 
 ---
 

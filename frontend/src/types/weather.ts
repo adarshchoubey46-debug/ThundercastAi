@@ -42,6 +42,43 @@ export interface HorizonPrediction {
   confidence_score: number;
 }
 
+export interface OpenMeteoForecastResponse {
+  latitude: number;
+  longitude: number;
+  timezone: string;
+  timezone_abbreviation: string;
+  utc_offset_seconds: number;
+  hourly_units: Record<string, string>;
+  hourly: {
+    time: string[];
+    temperature_2m: Array<number | null>;
+    dew_point_2m: Array<number | null>;
+    precipitation: Array<number | null>;
+    wind_speed_10m: Array<number | null>;
+    wind_direction_10m: Array<number | null>;
+    cape: Array<number | null>;
+    lifted_index: Array<number | null>;
+    cloud_cover: Array<number | null>;
+    weather_code: Array<number | null>;
+  };
+}
+
+export interface HourlyForecastPoint {
+  time: string;
+  temperature_c: number | null;
+  dew_point_c: number | null;
+  precipitation_mm: number | null;
+  wind_speed_kmh: number | null;
+  wind_direction_deg: number | null;
+  cape_jkg: number | null;
+  lifted_index: number | null;
+  cloud_cover_pct: number | null;
+  weather_code: number | null;
+  thunderstorm_probability: number;
+  lightning_probability: number;
+  heavy_rain_probability: number;
+}
+
 export interface LocationNowcast {
   location: GeoLocation;
   forecast_issue_time: string;

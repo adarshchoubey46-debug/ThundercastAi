@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { LocationNowcast } from '../types/weather';
-import { fetchNowcast } from '../services/api';
+import type { HourlyForecastPoint, RiskLevel } from '../types/weather';
+import { getForecast } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
 import {
   LineChart,
@@ -15,9 +15,11 @@ import {
 import { Clock, Sliders, TrendingUp, RefreshCw } from 'lucide-react';
 
 export const NowcastPage: React.FC = () => {
-  const [nowcasts, setNowcasts] = useState<LocationNowcast[]>([]);
-  const [selectedHorizon, setSelectedHorizon] = useState<number>(30); // Default 30 minutes
+  const [forecastHours, setForecastHours] = useState<HourlyForecastPoint[]>([]);
+  const [selectedHours, setSelectedHours] = useState<number>(6);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [wakingUp, setWakingUp] = useState<boolean>(false);
+  const [forecastUnavailable, setForecastUnavailable] = useState<boolean>(false);
   const [systemTime, setSystemTime] = useState<string>(new Date().toUTCString());
 
   useEffect(() => {
@@ -29,27 +31,41 @@ export const NowcastPage: React.FC = () => {
     return () => window.clearInterval(timer);
   }, []);
 
-  async function loadData() {
+  async function loadData(hours = selectedHours) {
     setRefreshing(true);
-    const data = await fetchNowcast();
-    setNowcasts(data);
-    setRefreshing(false);
+    setWakingUp(false);
+    setForecastUnavailable(false);
+    try {
+      const data = await getForecast(hours, () => setWakingUp(true));
+      setForecastHours(data);
+    } catch (error) {
+      console.error('Unable to load hourly forecast', error);
+      setForecastHours([]);
+      setForecastUnavailable(true);
+    } finally {
+      setRefreshing(false);
+      setWakingUp(false);
+    }
   }
 
-  const primaryNowcast = nowcasts[0];
+  const selectedPrediction = forecastHours.reduce<HourlyForecastPoint | null>((peak, hour) => (
+    !peak || hour.thunderstorm_probability > peak.thunderstorm_probability ? hour : peak
+  ), null);
+
+  const classifyRisk = (probability: number): RiskLevel => {
+    if (probability < 30) return 'LOW';
+    if (probability < 60) return 'MODERATE';
+    if (probability < 80) return 'HIGH';
+    return 'SEVERE';
+  };
 
   // Prepare chart dataset for Recharts
-  const chartData = primaryNowcast?.predictions.map((p) => ({
-    horizon: `+${p.horizon_minutes} Min`,
-    Thunderstorm: p.thunderstorm_probability,
-    Lightning: p.lightning_probability,
-    HeavyRain: p.heavy_rain_probability,
-    Confidence: p.confidence_score * 100,
-  })) || [];
-
-  const selectedPrediction = primaryNowcast?.predictions.find(
-    (p) => p.horizon_minutes === selectedHorizon
-  ) || primaryNowcast?.predictions[1];
+  const chartData = forecastHours.map((hour) => ({
+    horizon: new Date(hour.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    Thunderstorm: hour.thunderstorm_probability,
+    Lightning: hour.lightning_probability,
+    HeavyRain: hour.heavy_rain_probability,
+  }));
 
   return (
     <div className="space-y-6">
@@ -59,24 +75,24 @@ export const NowcastPage: React.FC = () => {
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <Clock className="w-4 h-4 text-cyan-400" />
-            <span>0 to 60-Minute Nowcasting Forecast Engine</span>
+            <span>Hourly Thunderstorm Forecast</span>
           </h2>
           <p className="text-xs text-gray-400">
-            Location: {primaryNowcast?.location.location_name} | Forecast Issued: {primaryNowcast?.forecast_issue_time.slice(11, 19)} UTC | System time: {systemTime}
+            Location: Bhopal, Madhya Pradesh | Forecast issued: {forecastHours[0]?.time ?? 'Waiting for forecast'} UTC | System time: {systemTime}
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
-          {primaryNowcast && (
-            <ProvenanceBadge sourceType={primaryNowcast.source_type} sourceName={primaryNowcast.source_name} />
+          {forecastHours.length > 0 && (
+            <ProvenanceBadge sourceType="MODEL_PREDICTION" sourceName="Open-Meteo hourly forecast" />
           )}
           <button
-            onClick={loadData}
+            onClick={() => void loadData(selectedHours)}
             disabled={refreshing}
             className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-medium flex items-center space-x-1 transition border border-gray-700"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh Model</span>
+            <span>Refresh Forecast</span>
           </button>
         </div>
       </div>
@@ -86,66 +102,73 @@ export const NowcastPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <label className="text-sm font-bold text-cyan-300 flex items-center gap-2">
             <Sliders className="w-4 h-4" />
-            <span>Forecast Lead Time Selector:</span>
+            <span>Forecast duration:</span>
             <span className="px-2 py-0.5 bg-cyan-950 text-cyan-400 border border-cyan-700 rounded font-mono text-xs">
-              +{selectedHorizon} Minutes
+              {selectedHours} Hours
             </span>
           </label>
-          <span className="text-xs text-gray-400 font-mono">Horizon Steps: [15m, 30m, 45m, 60m]</span>
+          <span className="text-xs text-gray-400 font-mono">Open-Meteo hourly range</span>
         </div>
 
         {/* Range Slider */}
         <div className="space-y-2">
           <input
             type="range"
-            min="15"
-            max="60"
-            step="15"
-            value={selectedHorizon}
-            onChange={(e) => setSelectedHorizon(Number(e.target.value))}
+            min="1"
+            max="24"
+            step="1"
+            value={selectedHours}
+            onChange={(event) => {
+              const hours = Number(event.target.value);
+              setSelectedHours(hours);
+              void loadData(hours);
+            }}
             className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
           />
           <div className="flex justify-between text-xs font-mono text-gray-400 px-1">
-            <span>+15 Min (Immediate)</span>
-            <span>+30 Min (Peak Risk)</span>
-            <span>+45 Min (Dissipating)</span>
-            <span>+60 Min (Outlook)</span>
+            <span>1 hour</span>
+            <span>6 hours</span>
+            <span>12 hours</span>
+            <span>24 hours</span>
           </div>
         </div>
+
+        {wakingUp && <p role="status" className="text-xs text-amber-700">Waking up server… retrying forecast request.</p>}
+        {forecastUnavailable && <p role="alert" className="text-xs text-red-700">Live weather data is temporarily unavailable. Please retry later.</p>}
 
         {/* Selected Horizon Probability Spotlight Card */}
         {selectedPrediction && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-800">
             <div className="p-4 bg-gray-900/80 rounded-xl border border-cyan-500/30">
-              <div className="text-xs text-gray-400">Thunderstorm Probability</div>
+              <div className="text-xs text-gray-400">Peak thunderstorm indicator</div>
               <div className="text-2xl font-bold text-cyan-400 font-mono mt-1">
                 {selectedPrediction.thunderstorm_probability}%
               </div>
-              <div className="text-[10px] text-gray-500 mt-1">Classification: {selectedPrediction.risk_level}</div>
+              <div className="text-[10px] text-gray-500 mt-1">{new Date(selectedPrediction.time).toLocaleString()} · {classifyRisk(selectedPrediction.thunderstorm_probability)}</div>
             </div>
 
             <div className="p-4 bg-gray-900/80 rounded-xl border border-yellow-500/30">
-              <div className="text-xs text-gray-400">Lightning Strike Hazard</div>
+              <div className="text-xs text-gray-400">Lightning potential indicator</div>
               <div className="text-2xl font-bold text-yellow-400 font-mono mt-1">
                 {selectedPrediction.lightning_probability}%
               </div>
-              <div className="text-[10px] text-gray-500 mt-1">Strike Rate: High Frequency</div>
+              <div className="text-[10px] text-gray-500 mt-1">CAPE: {selectedPrediction.cape_jkg ?? 'N/A'} J/kg</div>
             </div>
 
             <div className="p-4 bg-gray-900/80 rounded-xl border border-blue-500/30">
-              <div className="text-xs text-gray-400">Heavy Rain Inundation</div>
+              <div className="text-xs text-gray-400">Heavy-rain potential indicator</div>
               <div className="text-2xl font-bold text-blue-400 font-mono mt-1">
                 {selectedPrediction.heavy_rain_probability}%
               </div>
-              <div className="text-[10px] text-gray-500 mt-1">Rate: &gt; 40 mm/hr</div>
+              <div className="text-[10px] text-gray-500 mt-1">Forecast precipitation: {selectedPrediction.precipitation_mm ?? 'N/A'} mm</div>
             </div>
 
             <div className="p-4 bg-gray-900/80 rounded-xl border border-purple-500/30">
-              <div className="text-xs text-gray-400">Model Confidence & Uncertainty</div>
+              <div className="text-xs text-gray-400">Forecast conditions</div>
               <div className="text-2xl font-bold text-purple-400 font-mono mt-1">
-                {(selectedPrediction.confidence_score * 100).toFixed(0)}%
+                {selectedPrediction.temperature_c ?? 'N/A'}°C
               </div>
-              <div className="text-[10px] text-gray-500 mt-1">Uncertainty Bound: &plusmn; 8.5%</div>
+              <div className="text-[10px] text-gray-500 mt-1">Cloud {selectedPrediction.cloud_cover_pct ?? 'N/A'}% · LI {selectedPrediction.lifted_index ?? 'N/A'}</div>
             </div>
           </div>
         )}
@@ -157,9 +180,9 @@ export const NowcastPage: React.FC = () => {
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-cyan-400" />
-              <span>Multi-Horizon Probabilistic Hazard Curves (15 to 60 mins)</span>
+              <span>Hourly Weather Risk Indicators</span>
             </h3>
-            <p className="text-xs text-gray-400">Comparing Thunderstorm, Lightning, and Heavy Rain trajectory over Bhopal</p>
+            <p className="text-xs text-gray-400">Open-Meteo model fields across the selected {selectedHours}-hour forecast</p>
           </div>
         </div>
 
@@ -173,13 +196,13 @@ export const NowcastPage: React.FC = () => {
                 contentStyle={{ backgroundColor: '#ffffff', borderColor: '#d8e0e8', borderRadius: '4px', color: '#26384b' }}
               />
               <Legend wrapperStyle={{ paddingTop: '10px' }} />
-              <Line type="monotone" dataKey="Thunderstorm" stroke="#06b6d4" strokeWidth={3} dot={{ r: 5 }} />
-              <Line type="monotone" dataKey="Lightning" stroke="#f59e0b" strokeWidth={3} dot={{ r: 5 }} />
-              <Line type="monotone" dataKey="HeavyRain" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5 }} />
+              <Line type="monotone" dataKey="Thunderstorm" stroke="#06b6d4" strokeWidth={3} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="Lightning" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="HeavyRain" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-
+        <p className="text-[11px] text-gray-500">Risk indicators are derived from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes; they are not calibrated probabilities or official warnings.</p>
       </div>
 
     </div>

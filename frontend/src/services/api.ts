@@ -4,11 +4,115 @@ import type {
   Alert,
   HistoricalFrame,
   ModelPerformanceMetrics,
-  DataSourceStatus
+  DataSourceStatus,
+  HourlyForecastPoint,
+  OpenMeteoForecastResponse
 } from '../types/weather';
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 const API_BASE = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
+const MAX_FORECAST_RETRIES = 2;
+const FORECAST_RETRY_DELAY_MS = 1000;
+
+class ForecastHttpError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ForecastHttpError';
+    this.status = status;
+  }
+}
+
+function clampPercent(value: number): number {
+  return Math.round(Math.max(0, Math.min(98, value)));
+}
+
+function mapForecastResponse(response: OpenMeteoForecastResponse): HourlyForecastPoint[] {
+  const { hourly } = response;
+  return hourly.time.map((time, index) => {
+    const temperature = hourly.temperature_2m[index] ?? null;
+    const dewPoint = hourly.dew_point_2m[index] ?? null;
+    const precipitation = hourly.precipitation[index] ?? null;
+    const windSpeed = hourly.wind_speed_10m[index] ?? null;
+    const windDirection = hourly.wind_direction_10m[index] ?? null;
+    const cape = hourly.cape[index] ?? null;
+    const liftedIndex = hourly.lifted_index[index] ?? null;
+    const cloudCover = hourly.cloud_cover[index] ?? null;
+    const weatherCode = hourly.weather_code[index] ?? null;
+    const thunderstormCode = weatherCode === 95 || weatherCode === 96 || weatherCode === 99;
+    const instabilityScore = liftedIndex === null ? 0
+      : liftedIndex <= -6 ? 25
+        : liftedIndex <= -3 ? 18
+          : liftedIndex <= -1 ? 10
+            : 0;
+    const thunderstormProbability = thunderstormCode
+      ? 95
+      : clampPercent(
+        Math.max(cape ?? 0, 0) / 2000 * 55
+        + instabilityScore
+        + (cloudCover !== null && cloudCover >= 85 ? 10 : 0)
+        + (precipitation !== null && precipitation >= 1 ? 8 : 0)
+      );
+    const lightningProbability = thunderstormCode
+      ? 95
+      : clampPercent(thunderstormProbability * (cape !== null && cape >= 1000 ? 0.9 : 0.7));
+    const heavyRainCode = weatherCode === 65 || weatherCode === 67 || weatherCode === 82;
+    const heavyRainProbability = heavyRainCode
+      ? 90
+      : clampPercent(Math.max(precipitation ?? 0, 0) * 12 + (cloudCover !== null && cloudCover >= 90 ? 10 : 0));
+
+    return {
+      time,
+      temperature_c: temperature,
+      dew_point_c: dewPoint,
+      precipitation_mm: precipitation,
+      wind_speed_kmh: windSpeed,
+      wind_direction_deg: windDirection,
+      cape_jkg: cape,
+      lifted_index: liftedIndex,
+      cloud_cover_pct: cloudCover,
+      weather_code: weatherCode,
+      thunderstorm_probability: thunderstormProbability,
+      lightning_probability: lightningProbability,
+      heavy_rain_probability: heavyRainProbability,
+    };
+  });
+}
+
+export async function getForecast(
+  hours: number,
+  onRetry?: (nextAttempt: number) => void
+): Promise<HourlyForecastPoint[]> {
+  const requestedHours = Math.max(1, Math.min(24, Math.floor(hours)));
+  const url = new URL(`${API_BASE}/forecast`);
+  url.searchParams.set('lat', '23.2599');
+  url.searchParams.set('lon', '77.4126');
+  url.searchParams.set('hours', String(requestedHours));
+  let lastError: Error = new Error('Forecast request failed');
+
+  for (let attempt = 0; attempt <= MAX_FORECAST_RETRIES; attempt += 1) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new ForecastHttpError(
+          response.status,
+          `Forecast request failed (${response.status}): ${await response.text()}`
+        );
+      }
+      return mapForecastResponse(await response.json() as OpenMeteoForecastResponse);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`Forecast request attempt ${attempt + 1} failed`, lastError);
+      const isNonRetryableClientError = error instanceof ForecastHttpError && error.status < 500;
+      if (attempt === MAX_FORECAST_RETRIES || isNonRetryableClientError) break;
+      onRetry?.(attempt + 2);
+      await new Promise((resolve) => window.setTimeout(resolve, FORECAST_RETRY_DELAY_MS));
+    }
+  }
+
+  throw lastError;
+}
 
 const MOCK_BHOPAL_LOCATIONS = [
   { latitude: 23.2599, longitude: 77.4126, location_name: 'Bhopal Central (MP Nagar)', station_id: 'BPL_AWS_01' },

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import type {
   AtmosphericObservation,
-  LocationNowcast,
+  HourlyForecastPoint,
   Alert,
   DataSourceStatus
 } from '../types/weather';
 import {
   fetchObservations,
-  fetchNowcast,
+  getForecast,
   fetchAlerts,
   fetchDataSources
 } from '../services/api';
@@ -26,7 +26,9 @@ import {
 
 export const OverviewPage: React.FC = () => {
   const [observations, setObservations] = useState<AtmosphericObservation[]>([]);
-  const [nowcasts, setNowcasts] = useState<LocationNowcast[]>([]);
+  const [forecastHours, setForecastHours] = useState<HourlyForecastPoint[]>([]);
+  const [forecastUnavailable, setForecastUnavailable] = useState<boolean>(false);
+  const [forecastWaking, setForecastWaking] = useState<boolean>(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [dataSources, setDataSources] = useState<DataSourceStatus[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,14 +36,25 @@ export const OverviewPage: React.FC = () => {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [obsData, nowcastData, alertData, sourcesData] = await Promise.all([
+      const loadForecast = async () => {
+        try {
+          return await getForecast(6, () => setForecastWaking(true));
+        } catch (error) {
+          console.error('Unable to load Overview forecast', error);
+          setForecastUnavailable(true);
+          return [];
+        } finally {
+          setForecastWaking(false);
+        }
+      };
+      const [obsData, forecastData, alertData, sourcesData] = await Promise.all([
         fetchObservations(),
-        fetchNowcast(),
+        loadForecast(),
         fetchAlerts(),
         fetchDataSources()
       ]);
       setObservations(obsData);
-      setNowcasts(nowcastData);
+      setForecastHours(forecastData);
       setAlerts(alertData);
       setDataSources(sourcesData);
       setLoading(false);
@@ -54,13 +67,12 @@ export const OverviewPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex items-center space-x-3 text-cyan-400">
           <Activity className="w-6 h-6 animate-spin" />
-          <span className="text-sm font-mono">Syncing Atmospheric Observations for Bhopal...</span>
+          <span className="text-sm font-mono">{forecastWaking ? 'Waking up server...' : 'Syncing Atmospheric Observations for Bhopal...'}</span>
         </div>
       </div>
     );
   }
 
-  const primaryNowcast = nowcasts[0];
   const mainObs = observations[0];
 
   const getRiskClass = (level: string) => {
@@ -168,31 +180,32 @@ export const OverviewPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Col: Next 15, 30, 45, 60-Minute Forecast Cards */}
+        {/* Right Col: Live provider outlook cards */}
         <div className="glass-card p-5 space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between pb-3 border-b border-gray-800">
             <div>
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <CloudLightning className="w-4 h-4 text-cyan-400" />
-                <span>Multi-Horizon Nowcast Predictions</span>
+                <span>Live Thunderstorm Outlook</span>
               </h2>
-              <p className="text-xs text-gray-400">Model Version: {primaryNowcast?.model_version}</p>
+              <p className="text-xs text-gray-400">Open-Meteo hourly forecast · Bhopal</p>
             </div>
-            {primaryNowcast && (
-              <ProvenanceBadge sourceType={primaryNowcast.source_type} sourceName={primaryNowcast.source_name} compact />
+            {forecastHours.length > 0 && (
+              <ProvenanceBadge sourceType="MODEL_PREDICTION" sourceName="Open-Meteo forecast" compact />
             )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {primaryNowcast?.predictions.map((pred) => (
-              <div
-                key={pred.horizon_minutes}
-                className="bg-gray-900/80 p-4 rounded-xl border border-gray-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between space-y-3"
-              >
+            {forecastHours.slice(0, 4).map((hour) => {
+              const riskLevel = hour.thunderstorm_probability < 30 ? 'LOW'
+                : hour.thunderstorm_probability < 60 ? 'MODERATE'
+                  : hour.thunderstorm_probability < 80 ? 'HIGH' : 'SEVERE';
+              return (
+              <div key={hour.time} className="bg-gray-900/80 p-4 rounded-xl border border-gray-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-cyan-400 font-mono">+{pred.horizon_minutes} MIN</span>
-                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${getRiskClass(pred.risk_level)}`}>
-                    {pred.risk_level}
+                  <span className="text-xs font-bold text-cyan-400 font-mono">{new Date(hour.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${getRiskClass(riskLevel)}`}>
+                    {riskLevel}
                   </span>
                 </div>
 
@@ -200,12 +213,12 @@ export const OverviewPage: React.FC = () => {
                   <div>
                     <div className="flex justify-between text-gray-400 mb-0.5">
                       <span>Thunderstorm</span>
-                      <span className="font-mono text-white font-bold">{pred.thunderstorm_probability}%</span>
+                      <span className="font-mono text-white font-bold">{hour.thunderstorm_probability}%</span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
                       <div
                         className="bg-cyan-500 h-1.5 rounded-full"
-                        style={{ width: `${pred.thunderstorm_probability}%` }}
+                        style={{ width: `${hour.thunderstorm_probability}%` }}
                       ></div>
                     </div>
                   </div>
@@ -213,12 +226,12 @@ export const OverviewPage: React.FC = () => {
                   <div>
                     <div className="flex justify-between text-gray-400 mb-0.5">
                       <span>Lightning Strike</span>
-                      <span className="font-mono text-yellow-400 font-bold">{pred.lightning_probability}%</span>
+                      <span className="font-mono text-yellow-400 font-bold">{hour.lightning_probability}%</span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
                       <div
                         className="bg-yellow-400 h-1.5 rounded-full"
-                        style={{ width: `${pred.lightning_probability}%` }}
+                        style={{ width: `${hour.lightning_probability}%` }}
                       ></div>
                     </div>
                   </div>
@@ -226,27 +239,30 @@ export const OverviewPage: React.FC = () => {
                   <div>
                     <div className="flex justify-between text-gray-400 mb-0.5">
                       <span>Heavy Rain</span>
-                      <span className="font-mono text-blue-400 font-bold">{pred.heavy_rain_probability}%</span>
+                      <span className="font-mono text-blue-400 font-bold">{hour.heavy_rain_probability}%</span>
                     </div>
                     <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
                       <div
                         className="bg-blue-500 h-1.5 rounded-full"
-                        style={{ width: `${pred.heavy_rain_probability}%` }}
+                        style={{ width: `${hour.heavy_rain_probability}%` }}
                       ></div>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-gray-800 flex justify-between text-[11px] text-gray-500 font-mono">
-                  <span>Confidence:</span>
-                  <span className="text-gray-300 font-bold">{(pred.confidence_score * 100).toFixed(0)}%</span>
+                  <span>CAPE / rain:</span>
+                  <span className="text-gray-300 font-bold">{hour.cape_jkg ?? 'N/A'} J/kg · {hour.precipitation_mm ?? 'N/A'} mm</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="p-3 bg-gray-950/60 rounded-lg text-xs text-gray-400 border border-gray-800 font-mono">
-            {primaryNowcast?.disclaimer}
+          {forecastUnavailable && <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">Live weather data is temporarily unavailable. Please retry later.</p>}
+          {forecastWaking && <p role="status" className="text-xs text-amber-700">Waking up server… retrying forecast request.</p>}
+          <div className="p-3 bg-gray-950/60 rounded-lg text-xs text-gray-400 border border-gray-800">
+            Thunderstorm and lightning values are derived risk indicators from CAPE, lifted index, precipitation, cloud cover, and WMO weather codes. They are not calibrated probabilities or official warnings.
           </div>
         </div>
 

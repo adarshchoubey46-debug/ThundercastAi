@@ -102,3 +102,24 @@ class DataSourceStatus(BaseModel):
     latency_minutes: int
     data_freshness: str
     coverage_area: str
+
+class OpenMeteoHourlyForecast(BaseModel):
+    time: List[str]
+    temperature_2m: List[Optional[float]]
+    dew_point_2m: List[Optional[float]]
+    precipitation: List[Optional[float]]
+    wind_speed_10m: List[Optional[float]]
+    wind_direction_10m: List[Optional[float]]
+    cape: List[Optional[float]]
+    lifted_index: List[Optional[float]]
+    cloud_cover: List[Optional[float]]
+    weather_code: List[Optional[int]]
+
+class OpenMeteoForecast(BaseModel):
+    latitude: float
+    longitude: float
+    timezone: str
+    timezone_abbreviation: str
+    utc_offset_seconds: int
+    hourly_units: Dict[str, str]
+    hourly: OpenMeteoHourlyForecast

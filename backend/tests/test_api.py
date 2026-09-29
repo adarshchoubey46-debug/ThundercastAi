@@ -5,11 +5,13 @@ from app.main import app
 client = TestClient(app)
 
 def test_health_endpoint():
-    response = client.get("/api/health")
+    response = client.get("/health")
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert data["service"] == "MeghDoot"
+    assert response.json() == {"status": "ok"}
+
+    api_response = client.get("/api/health")
+    assert api_response.status_code == 200
+    assert api_response.json()["status"] == "healthy"
 
 def test_observations_endpoint():
     response = client.get("/api/observations")
