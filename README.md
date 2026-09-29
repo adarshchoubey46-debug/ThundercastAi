@@ -1,27 +1,27 @@
-# ThunderCast AI — AI-Based Thunderstorm & Lightning Nowcasting System
+# Vajra Kavach — Regional Severe Weather Early-Warning System
 
-> **ThunderCast AI** is a professional, modular, hackathon-ready meteorological intelligence platform that combines atmospheric observations with machine learning to estimate thunderstorm, lightning strike, and heavy rainfall probabilities over 15, 30, 45, and 60-minute horizons.
+> **Vajra Kavach** is a regional weather decision-support platform that combines atmospheric observations with short-range estimates of thunderstorm, lightning, and heavy rainfall risk over 15, 30, 45, and 60-minute horizons.
 
 ---
 
 ## ⚠️ Important Notices & Data Provenance
 
-1. **PROTOTYPE RISK THRESHOLDS**:
-   > *"Prototype risk thresholds — not official government warnings. For emergency advisories, consult the India Meteorological Department (IMD)."*
+1. **ADVISORY RISK SCREENING**:
+   > *"Automated risk screening is not an official warning. For verified advisories, consult the India Meteorological Department (IMD)."*
    - Low Risk: `< 30%`
    - Moderate Risk: `30% - 60%`
    - High Risk: `60% - 80%`
    - Severe Hazard: `> 80%`
 
-2. **DEMO / SYNTHETIC DATA MANDATORY DISCLAIMER**:
-   > *"DEMO / SYNTHETIC DATA — NOT A REAL-WORLD VALIDATION. Outputs are for pipeline demonstration and software testing purposes only."*
+2. **SAMPLE-DATA PROVENANCE**:
+   > *"Some records use synthetic sample data and have not been validated against live sensors. Do not use this dashboard as the sole source for safety decisions."*
 
 3. **STRICT DATA PROVENANCE BADGING**:
    Every record, observation, and model output displays explicit metadata:
    - `source_type`: `REAL_OBSERVATION` | `HISTORICAL_REPLAY` | `SYNTHETIC_DEMO` | `MODEL_PREDICTION`
    - `source_name`: String identifier
    - `data_quality`: Sensor quality status
-   - `is_demo`: Boolean flag
+   - `is_demo`: API compatibility flag; true marks synthetic sample input
 
 ---
 
@@ -29,7 +29,7 @@
 
 - **Frontend (`/frontend`)**:
   - React 19 + TypeScript + Vite
-  - Tailwind CSS + Custom Dark Meteorological Glassmorphism UI
+   - Tailwind CSS + accessible light operational dashboard
   - Leaflet & React Leaflet (Interactive Weather Risk Map, Radar Reflectivity Overlay, Storm Track Vectors)
   - Recharts (Dual-axis probability trend curves)
   - Lucide React Icons
@@ -132,9 +132,9 @@ npm run dev
    - Data source operational health indicators.
 
 2. **Interactive Weather Map**:
-   - Leaflet geographic map centered on Bhopal (`23.2599°N, 77.4126°E`).
-   - Simulated IMD S-Band Doppler Radar reflectivity rectangle overlay (`0 to 60 dBZ`).
-   - Lightning stroke markers with pulse animations.
+   - Leaflet geographic map with CARTO street tiles and Esri satellite imagery.
+   - Street and satellite basemaps with automatic key-failure fallback.
+   - Station reflectivity and lightning overlays refreshed from the API every 30 seconds.
    - Monsoon storm movement trajectory vector arrows.
    - Clickable weather station popups.
 
@@ -146,7 +146,7 @@ npm run dev
 4. **Alerts & Hazard Management**:
    - Risk classification levels (Low, Moderate, High, Severe).
    - Detailed trigger explanations (Reflectivity > 50 dBZ, Lightning stroke rate).
-   - Interactive Demo Push Notification simulator.
+   - Opt-in desktop notifications for newly detected high-risk screenings, plus a local-only notification test.
 
 5. **Historical Replay Engine**:
    - Offline 1-hour playback of Bhopal storm event with Play, Pause, Step (+5 min), and Speed controls (1x, 2x, 5x).
@@ -158,11 +158,15 @@ npm run dev
    - 2x2 Confusion Matrix (TP, FP, FN, TN).
 
 7. **Data Sources & Adapters**:
-   - Status telemetry for IMD Radar, MOSDAC INSAT-3DR Satellite, and IITM Lightning network.
-   - Drag-and-drop local file upload interface for CSV, JSON, and NetCDF dataset ingestion.
+   - Status telemetry for configured weather source adapters, with sample-input status identified.
+   - Local file selection for CSV, JSON, and NetCDF dataset inspection.
+
+8. **Safety & Shelter Planning**:
+   - Save a locally confirmed safe site and show it on the map; no shelter locations are invented or supplied as an official directory.
+   - Persistent severe-weather readiness checklist with links to IMD and India's 112 emergency service.
 
 ---
 
 ## 🛡️ License
 
-Developed for hackathon demonstration and meteorological research.
+Developed for regional weather monitoring and decision-support evaluation.

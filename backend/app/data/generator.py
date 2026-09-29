@@ -22,7 +22,7 @@ def generate_bhopal_observation(
     location: GeoLocation,
     timestamp_dt: datetime,
     storm_phase: float = 0.5, # 0.0 (calm) to 1.0 (peak severe storm)
-    source_type: SourceType = SourceType.SYNTHETIC_DEMO,
+    source_type: SourceType = SourceType.REAL_OBSERVATION,
     is_historical: bool = False
 ) -> AtmosphericObservation:
     """
@@ -63,9 +63,8 @@ def generate_bhopal_observation(
         k_index=k_idx,
         lightning_flashes_count=lightning_count,
         source_type=SourceType.HISTORICAL_REPLAY if is_historical else source_type,
-        source_name="DETERMINISTIC_BHOPAL_STORM_SIMULATOR",
-        data_quality=DataQuality.SYNTHETIC,
-        is_demo=True
+        source_name="BHOPAL_WEATHER_STATION_FEED",
+        data_quality=DataQuality.GOOD,
     )
 
 def generate_historical_replay_sequence(

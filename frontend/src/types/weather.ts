@@ -1,10 +1,9 @@
 export type SourceType = 
   | 'REAL_OBSERVATION'
   | 'HISTORICAL_REPLAY'
-  | 'SYNTHETIC_DEMO'
   | 'MODEL_PREDICTION';
 
-export type DataQuality = 'GOOD' | 'DEGRADED' | 'MISSING_FEATURES' | 'SYNTHETIC';
+export type DataQuality = 'GOOD' | 'DEGRADED' | 'MISSING_FEATURES';
 
 export type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'SEVERE';
 
@@ -32,7 +31,6 @@ export interface AtmosphericObservation {
   source_type: SourceType;
   source_name: string;
   data_quality: DataQuality;
-  is_demo: boolean;
 }
 
 export interface HorizonPrediction {
@@ -51,7 +49,6 @@ export interface LocationNowcast {
   source_name: string;
   model_version: string;
   data_quality: DataQuality;
-  is_demo: boolean;
   disclaimer: string;
   predictions: HorizonPrediction[];
 }
@@ -66,7 +63,6 @@ export interface Alert {
   expected_window: string;
   explanation: string;
   trigger_factors: string[];
-  is_demo: boolean;
   source_type: SourceType;
 }
 
@@ -107,10 +103,9 @@ export interface DataSourceStatus {
   source_id: string;
   source_name: string;
   type: string;
-  status: 'OPERATIONAL' | 'DEGRADED' | 'DEMO_MODE' | 'OFFLINE';
+  status: 'OPERATIONAL' | 'DEGRADED';
   last_updated: string;
   latency_minutes: number;
   data_freshness: string;
   coverage_area: string;
-  is_demo: boolean;
 }

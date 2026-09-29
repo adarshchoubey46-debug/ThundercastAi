@@ -12,21 +12,21 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import {
-  Clock,
-  Sliders,
-  TrendingUp,
-  RefreshCw,
-  AlertTriangle
-} from 'lucide-react';
+import { Clock, Sliders, TrendingUp, RefreshCw } from 'lucide-react';
 
 export const NowcastPage: React.FC = () => {
   const [nowcasts, setNowcasts] = useState<LocationNowcast[]>([]);
   const [selectedHorizon, setSelectedHorizon] = useState<number>(30); // Default 30 minutes
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [systemTime, setSystemTime] = useState<string>(new Date().toUTCString());
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setSystemTime(new Date().toUTCString()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
   async function loadData() {
@@ -62,7 +62,7 @@ export const NowcastPage: React.FC = () => {
             <span>0 to 60-Minute Nowcasting Forecast Engine</span>
           </h2>
           <p className="text-xs text-gray-400">
-            Location: {primaryNowcast?.location.location_name} | Forecast Issued: {primaryNowcast?.forecast_issue_time.slice(11, 19)} UTC
+            Location: {primaryNowcast?.location.location_name} | Forecast Issued: {primaryNowcast?.forecast_issue_time.slice(11, 19)} UTC | System time: {systemTime}
           </p>
         </div>
 
@@ -180,10 +180,6 @@ export const NowcastPage: React.FC = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="p-3 bg-amber-950/20 border border-amber-800/40 rounded-lg text-xs text-amber-300 flex items-center space-x-2 font-mono">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Note: Predictions reflect XGBoost baseline feature importance outputs based on synthetic Bhopal atmospheric profiles.</span>
-        </div>
       </div>
 
     </div>

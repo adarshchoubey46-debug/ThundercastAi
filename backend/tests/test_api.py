@@ -9,7 +9,7 @@ def test_health_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert "ThunderCast" in data["service"]
+    assert data["service"] == "Vajra Kavach"
 
 def test_observations_endpoint():
     response = client.get("/api/observations")
@@ -53,7 +53,7 @@ def test_model_metrics_endpoint():
     assert "csi" in data
     assert "pod" in data
     assert "far" in data
-    assert "DEMO / SYNTHETIC DATA" in data["disclaimer"]
+    assert data["disclaimer"] == ""
 
 def test_data_sources_endpoint():
     response = client.get("/api/data-sources")

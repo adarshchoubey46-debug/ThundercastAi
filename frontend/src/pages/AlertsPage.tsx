@@ -1,33 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import type { Alert } from '../types/weather';
-import { fetchAlerts } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import type { Alert, AtmosphericObservation } from '../types/weather';
+import { fetchAlerts, fetchObservations } from '../services/api';
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
 import {
   Bell,
   AlertTriangle,
   Send,
   Clock,
-  MapPin
+  MapPin,
+  BellRing
 } from 'lucide-react';
 
-export const AlertsPage: React.FC = () => {
+interface AlertsPageProps {
+  active: boolean;
+}
+
+export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [demoNotifications, setDemoNotifications] = useState<string[]>([]);
-  const [simulatedRisk, setSimulatedRisk] = useState<string>('SEVERE');
-  const [simulatedArea, setSimulatedArea] = useState<string>('Bhopal Central & MP Nagar');
+  const [targetArea, setTargetArea] = useState<string>('Bhopal Central & MP Nagar');
+  const [lastChecked, setLastChecked] = useState<string>('Checking observations...');
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(
+    typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
+  );
+  const previousAutoAlertIds = useRef<Set<string>>(new Set());
+  const completedInitialCheck = useRef(false);
 
   useEffect(() => {
-    async function loadAlerts() {
-      const data = await fetchAlerts();
-      setAlerts(data);
-    }
-    loadAlerts();
-  }, []);
+    let mounted = true;
+    const assessConditions = async () => {
+      const [advisories, observations] = await Promise.all([fetchAlerts(), fetchObservations()]);
+      if (!mounted) return;
 
-  const handleSimulatePushNotification = () => {
-    const timeStr = new Date().toLocaleTimeString();
-    const newMsg = `[${timeStr}] DEMO ALERT PUSH: ${simulatedRisk} hazard predicted for ${simulatedArea} within next 15–30 mins.`;
-    setDemoNotifications([newMsg, ...demoNotifications]);
+      const automaticAlerts = observations.flatMap((observation: AtmosphericObservation) => {
+        const factors: string[] = [];
+        const rain = observation.rainfall_mm_hr ?? 0;
+        const reflectivity = observation.radar_reflectivity_dbz ?? 0;
+        const lightning = observation.lightning_flashes_count;
+
+        if (reflectivity >= 45) factors.push(`Radar reflectivity ${reflectivity} dBZ (screening threshold: 45 dBZ)`);
+        if (rain >= 30) factors.push(`Rainfall rate ${rain} mm/h (screening threshold: 30 mm/h)`);
+        if (lightning >= 20) factors.push(`Lightning activity ${lightning} flashes (screening threshold: 20)`);
+        if (factors.length === 0) return [];
+
+        const severeConditions = reflectivity >= 55 || rain >= 50 || lightning >= 35;
+        const riskLevel: Alert['risk_level'] = severeConditions ? 'SEVERE' : factors.length > 1 ? 'HIGH' : 'MODERATE';
+        const stationName = observation.location.location_name;
+
+        return [{
+          id: `AUTO-${observation.location.station_id ?? stationName}-${riskLevel}`,
+          risk_level: riskLevel,
+          title: `Automated ${riskLevel.toLowerCase()} screening: ${stationName}`,
+          hazard_type: 'Thunderstorm and heavy rainfall screening',
+          affected_area: stationName,
+          issue_time: observation.timestamp,
+          expected_window: 'Review current conditions',
+          explanation: factors.join('; '),
+          trigger_factors: factors,
+          source_type: 'MODEL_PREDICTION' as const
+        }];
+      });
+
+      const newAutomaticAlerts = automaticAlerts.filter((alert) => !previousAutoAlertIds.current.has(alert.id));
+      if (completedInitialCheck.current && notificationPermission === 'granted') {
+        newAutomaticAlerts.filter((alert) => alert.risk_level === 'HIGH' || alert.risk_level === 'SEVERE').forEach((alert) => {
+          new Notification(`Vajra Kavach · ${alert.risk_level} screening`, {
+            body: `${alert.affected_area}: ${alert.trigger_factors.join('; ')}`
+          });
+        });
+      }
+
+      previousAutoAlertIds.current = new Set(automaticAlerts.map((alert) => alert.id));
+      completedInitialCheck.current = true;
+      setAlerts([...automaticAlerts, ...advisories]);
+      setLastChecked(new Date().toLocaleTimeString());
+    };
+
+    void assessConditions();
+    const timer = window.setInterval(() => void assessConditions(), 60_000);
+    return () => {
+      mounted = false;
+      window.clearInterval(timer);
+    };
+  }, [notificationPermission]);
+
+  const enableDesktopAlerts = async () => {
+    if (typeof Notification === 'undefined') {
+      setNotificationPermission('unsupported');
+      return;
+    }
+    setNotificationPermission(await Notification.requestPermission());
   };
 
   const getRiskClass = (level: string) => {
@@ -41,7 +102,7 @@ export const AlertsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={active ? 'space-y-6' : 'hidden'} aria-hidden={!active}>
       
       {/* Top Header Card */}
       <div className="glass-card p-5 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -51,12 +112,21 @@ export const AlertsPage: React.FC = () => {
             <span>Hazard Risk Classification & Emergency Alert Management</span>
           </h2>
           <p className="text-xs text-gray-400">
-            Automated threshold trigger engine based on radar reflectivity and lightning flash density
+            Station observations are screened every minute for rising rainfall, radar, and lightning thresholds.
           </p>
         </div>
 
-        <div className="p-2 bg-amber-950/40 border border-amber-800/50 rounded-lg text-xs text-amber-300 font-mono">
-          Prototype risk thresholds — not official government warnings.
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="text-[11px] text-gray-500" aria-live="polite">Last scan: {lastChecked}</div>
+          <button
+            type="button"
+            onClick={enableDesktopAlerts}
+            disabled={notificationPermission === 'granted' || notificationPermission === 'denied' || notificationPermission === 'unsupported'}
+            className="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded text-xs font-semibold disabled:opacity-60"
+          >
+            <BellRing className="inline w-3.5 h-3.5 mr-1.5" />
+            {notificationPermission === 'granted' ? 'Desktop alerts enabled' : notificationPermission === 'denied' ? 'Notifications blocked' : notificationPermission === 'unsupported' ? 'Notifications unavailable' : 'Enable desktop alerts'}
+          </button>
         </div>
       </div>
 
@@ -107,7 +177,7 @@ export const AlertsPage: React.FC = () => {
                   <div className="flex flex-wrap gap-2">
                     {alert.trigger_factors.map((factor, idx) => (
                       <span key={idx} className="px-2 py-0.5 bg-gray-800 text-cyan-300 rounded border border-gray-700 text-[11px] font-mono">
-                        &check; {factor}
+                        {factor}
                       </span>
                     ))}
                   </div>
@@ -117,63 +187,46 @@ export const AlertsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Col: Interactive Demo Notification Simulator */}
+        {/* Dispatch status */}
         <div className="glass-card p-5 space-y-4">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Send className="w-4 h-4 text-cyan-400" />
-            <span>Demo Push Notification Simulator</span>
+            <span>Broadcast Dispatch Log</span>
           </h3>
 
           <div className="space-y-3 text-xs">
             <div>
-              <label className="block text-gray-400 mb-1">Simulate Risk Level:</label>
+              <label className="block text-gray-400 mb-1">Target area:</label>
               <select
-                value={simulatedRisk}
-                onChange={(e) => setSimulatedRisk(e.target.value)}
+                value={targetArea}
+                onChange={(e) => setTargetArea(e.target.value)}
                 className="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white font-mono"
               >
-                <option value="LOW">LOW (&lt;30%)</option>
-                <option value="MODERATE">MODERATE (30–60%)</option>
-                <option value="HIGH">HIGH (60–80%)</option>
-                <option value="SEVERE">SEVERE (&gt;80%)</option>
+                <option>Bhopal Central &amp; MP Nagar</option>
+                <option>Upper Lake</option>
+                <option>Indrapuri</option>
+                <option>Kolar Road</option>
+                <option>Mandideep</option>
               </select>
             </div>
-
-            <div>
-              <label className="block text-gray-400 mb-1">Target Area:</label>
-              <input
-                type="text"
-                value={simulatedArea}
-                onChange={(e) => setSimulatedArea(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white"
-              />
-            </div>
-
-            <button
-              onClick={handleSimulatePushNotification}
-              className="w-full py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-gray-950 font-bold rounded-lg text-xs flex items-center justify-center space-x-1.5 transition shadow-lg shadow-cyan-500/20"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Trigger Demo Alert Broadcast</span>
-            </button>
           </div>
 
           {/* Broadcast Log */}
           <div className="space-y-2 pt-3 border-t border-gray-800">
-            <span className="text-xs font-bold text-gray-400">Broadcast Dispatch Log:</span>
-            {demoNotifications.length === 0 ? (
-              <div className="text-[11px] text-gray-500 italic p-3 bg-gray-900/50 rounded border border-gray-800">
-                No simulated push alerts dispatched yet. Click button above to test notification queue.
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[220px] overflow-y-auto font-mono text-[11px]">
-                {demoNotifications.map((msg, i) => (
-                  <div key={i} className="p-2.5 bg-amber-950/30 border border-amber-800/40 rounded text-amber-200">
-                    {msg}
-                  </div>
-                ))}
-              </div>
-            )}
+            <span className="text-xs font-bold text-gray-400">Current feed:</span>
+            <div className="space-y-2 max-h-[220px] overflow-y-auto font-mono text-[11px]">
+              {alerts.filter((alert) => alert.affected_area.includes(targetArea.split(' &')[0])).map((alert) => (
+                <div key={alert.id} className="p-2.5 bg-cyan-950/30 border border-cyan-800/40 rounded text-cyan-800">
+                  <div className="font-bold">{alert.risk_level} · {alert.affected_area}</div>
+                  <div>{alert.issue_time} · {alert.hazard_type}</div>
+                </div>
+              ))}
+              {alerts.filter((alert) => alert.affected_area.includes(targetArea.split(' &')[0])).length === 0 && (
+                <div className="text-[11px] text-gray-500 italic p-3 bg-gray-900/50 rounded border border-gray-800">
+                  No active dispatch for the selected area.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

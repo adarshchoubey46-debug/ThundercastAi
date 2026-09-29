@@ -7,6 +7,7 @@ import { AlertsPage } from './pages/AlertsPage';
 import { ReplayPage } from './pages/ReplayPage';
 import { PerformancePage } from './pages/PerformancePage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
+import { SafetyPage } from './pages/SafetyPage';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('overview');
@@ -19,14 +20,15 @@ export function App() {
         {activeTab === 'overview' && <OverviewPage />}
         {activeTab === 'map' && <MapPage />}
         {activeTab === 'nowcast' && <NowcastPage />}
-        {activeTab === 'alerts' && <AlertsPage />}
+        <AlertsPage active={activeTab === 'alerts'} />
         {activeTab === 'replay' && <ReplayPage />}
         {activeTab === 'performance' && <PerformancePage />}
         {activeTab === 'sources' && <DataSourcesPage />}
+        {activeTab === 'safety' && <SafetyPage />}
       </main>
 
       <footer className="py-4 border-t border-gray-900 bg-white text-center text-xs text-gray-500">
-        ThunderCast AI · Bhopal, Madhya Pradesh · Prototype decision-support system
+        Vajra Kavach · Regional weather decision support · Bhopal, Madhya Pradesh
       </footer>
     </div>
   );

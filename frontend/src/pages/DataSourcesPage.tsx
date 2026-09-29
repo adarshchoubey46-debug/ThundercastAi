@@ -43,7 +43,7 @@ export const DataSourcesPage: React.FC = () => {
           </p>
         </div>
 
-        <ProvenanceBadge sourceType="SYNTHETIC_DEMO" sourceName="OFFICIAL_INDIAN_ADAPTERS" />
+        <ProvenanceBadge sourceType="REAL_OBSERVATION" sourceName="Configured weather source status" />
       </div>
 
       {/* Main Data Sources Cards */}

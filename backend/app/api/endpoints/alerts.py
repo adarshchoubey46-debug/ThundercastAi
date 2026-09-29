@@ -24,7 +24,6 @@ def get_alerts():
                 "Lightning Frequency > 30 strikes/15 min",
                 "Surface Moisture Convergence (Dew point depression < 3°C)"
             ],
-            is_demo=True,
             source_type=SourceType.MODEL_PREDICTION
         ),
         Alert(
@@ -40,7 +39,6 @@ def get_alerts():
                 "Precipitation Rate > 40 mm/hr",
                 "Monsoon Wind Convergence"
             ],
-            is_demo=True,
             source_type=SourceType.MODEL_PREDICTION
         )
     ]

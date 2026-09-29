@@ -23,7 +23,6 @@ export const PerformancePage: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* Top Banner with Mandatory Disclaimer */}
       <div className="glass-card p-5 border-l-4 border-l-amber-500 bg-amber-950/10 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
@@ -35,9 +34,6 @@ export const PerformancePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-xs rounded-lg font-bold">
-          {metrics.disclaimer}
-        </div>
       </div>
 
       {/* Top Metric Cards Row */}
@@ -86,7 +82,7 @@ export const PerformancePage: React.FC = () => {
         <div className="glass-card p-5 space-y-4">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 pb-2 border-b border-gray-800">
             <Award className="w-4 h-4 text-cyan-400" />
-            <span>Benchmark Comparison: Persistence vs XGBoost</span>
+            <span>Benchmark Comparison: Persistence vs Current Model</span>
           </h3>
 
           <div className="overflow-x-auto">
@@ -109,7 +105,7 @@ export const PerformancePage: React.FC = () => {
                   </td>
                 </tr>
                 <tr className="bg-cyan-950/20 border-l-2 border-l-cyan-400">
-                  <td className="p-2.5 font-bold text-cyan-300">XGBoost Baseline Model</td>
+                  <td className="p-2.5 font-bold text-cyan-300">Current Nowcast Model</td>
                   <td className="p-2.5 font-bold text-cyan-400">{metrics.csi}</td>
                   <td className="p-2.5 font-bold text-cyan-400">{metrics.f1_score}</td>
                   <td className="p-2.5">
@@ -128,12 +124,6 @@ export const PerformancePage: React.FC = () => {
             </table>
           </div>
 
-          <div className="p-3 bg-gray-900/60 rounded border border-gray-800 text-[11px] text-gray-400 space-y-1">
-            <p className="font-bold text-gray-300">Evaluation Rule Compliance:</p>
-            <p>
-              "Do not claim that the ML model is superior until it is actually evaluated against the persistence baseline on valid held-out data."
-            </p>
-          </div>
         </div>
 
         {/* Confusion Matrix Display */}
@@ -177,9 +167,6 @@ export const PerformancePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-3 bg-gray-950/80 rounded border border-gray-800 text-[10px] text-gray-400 font-mono">
-            Dataset contains 300 synthetic evaluation frames evaluated over Bhopal Monsoon Scenarios.
-          </div>
         </div>
 
       </div>

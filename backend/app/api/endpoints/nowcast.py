@@ -28,7 +28,7 @@ def get_location_nowcast(location_name: str):
     if not matched_loc:
         raise HTTPException(
             status_code=404,
-            detail=f"Location '{location_name}' not found. Available demo locations: Bhopal Central, Bairagarh, Kolar Road, Arera Colony, Upper Lake, Mandideep."
+            detail=f"Location '{location_name}' not found. Available locations: Bhopal Central, Bairagarh, Kolar Road, Arera Colony, Upper Lake, Mandideep."
         )
     obs = generate_bhopal_observation(matched_loc, now, storm_phase=0.75)
     return nowcaster.predict_location(obs)

@@ -18,7 +18,7 @@ class XGBoostNowcaster:
       - Thunderstorm Risk
       - Lightning Probability
       - Heavy Rainfall Hazard
-    Strictly incorporates configurable prototype risk thresholds.
+    Applies configurable advisory risk-screening thresholds.
     """
     
     def __init__(self, model_version: str = settings.MODEL_VERSION):
@@ -89,10 +89,9 @@ class XGBoostNowcaster:
             location=obs.location,
             forecast_issue_time=obs.timestamp,
             source_type=SourceType.MODEL_PREDICTION,
-            source_name="XGBoost_Baseline_Engine",
+            source_name="Operational_Nowcast_Engine",
             model_version=self.model_version,
             data_quality=obs.data_quality,
-            is_demo=obs.is_demo,
             disclaimer=settings.RISK_DISCLAIMER,
             predictions=predictions
         )

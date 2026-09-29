@@ -5,8 +5,10 @@ import { ProvenanceBadge } from '../components/common/ProvenanceBadge';
 import {
   Play,
   Pause,
+  SkipBack,
   SkipForward,
   RotateCcw,
+  Download,
   History,
   CheckCircle2,
   XCircle,
@@ -34,7 +36,7 @@ export const ReplayPage: React.FC = () => {
 
   // Timer loop for auto playback
   useEffect(() => {
-    let timer: any;
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (isPlaying && frames.length > 0) {
       const intervalMs = 2000 / playbackSpeed; // 2 seconds per step at 1x
       timer = setInterval(() => {
@@ -50,12 +52,35 @@ export const ReplayPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [isPlaying, playbackSpeed, frames]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName))) return;
+
+      if (event.code === 'Space') {
+        if (target instanceof HTMLElement && target.tagName === 'BUTTON') return;
+        event.preventDefault();
+        setIsPlaying((playing) => !playing);
+      } else if (event.key === 'ArrowRight') {
+        setCurrentStep((step) => Math.min(frames.length - 1, step + 1));
+      } else if (event.key === 'ArrowLeft') {
+        setCurrentStep((step) => Math.max(0, step - 1));
+      } else if (event.key === 'Home') {
+        setIsPlaying(false);
+        setCurrentStep(0);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [frames.length]);
+
   if (loading || frames.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex items-center space-x-3 text-purple-400 font-mono text-sm">
           <Activity className="w-6 h-6 animate-spin" />
-          <span>Loading Offline Historical Bhopal Monsoon Replay Dataset...</span>
+          <span>Loading Historical Bhopal Monsoon Replay...</span>
         </div>
       </div>
     );
@@ -68,6 +93,41 @@ export const ReplayPage: React.FC = () => {
   // Forecast evaluation at current timestamp step
   const forecastedThunderstorm = currentFrame.storm_intensity_phase > 0.45;
   const thunderstormCorrect = forecastedThunderstorm === groundTruth.thunderstorm_occurred;
+  const replayProgress = frames.length > 1 ? currentStep / (frames.length - 1) : 0;
+  const stormX = 110 + replayProgress * 520;
+  const stormRadius = 22 + currentFrame.storm_intensity_phase * 54;
+
+  const exportReplay = () => {
+    const escapeCsv = (value: string | number | boolean | null | undefined) =>
+      `"${String(value ?? '').replaceAll('"', '""')}"`;
+    const rows = [
+      ['timestamp', 'step', 'location', 'temperature_c', 'humidity_pct', 'rainfall_mm_hr', 'reflectivity_dbz', 'lightning_flashes', 'storm_intensity_pct', 'thunderstorm_observed', 'lightning_observed', 'heavy_rain_observed'],
+      ...frames.flatMap((frame) => frame.observations.map((observation) => [
+        frame.timestamp,
+        frame.step_index,
+        observation.location.location_name,
+        observation.temperature_c,
+        observation.humidity_pct,
+        observation.rainfall_mm_hr,
+        observation.radar_reflectivity_dbz,
+        observation.lightning_flashes_count,
+        Math.round(frame.storm_intensity_phase * 100),
+        frame.ground_truth_label.thunderstorm_occurred,
+        frame.ground_truth_label.lightning_occurred,
+        frame.ground_truth_label.heavy_rain_occurred
+      ]))
+    ];
+    const content = rows.map((row) => row.map(escapeCsv).join(',')).join('\r\n');
+    const file = new Blob([content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'vajra-kavach-bhopal-replay.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   return (
     <div className="space-y-6">
@@ -80,7 +140,7 @@ export const ReplayPage: React.FC = () => {
             <span>Historical Storm Event Replay Engine</span>
           </h2>
           <p className="text-xs text-gray-400">
-            Playback of Bhopal Monsoon Storm Event (12 Steps, 5-Min Intervals) | Offline Guaranteed
+            Playback of Bhopal Monsoon Storm Event (12 Steps, 5-Min Intervals)
           </p>
         </div>
 
@@ -96,6 +156,14 @@ export const ReplayPage: React.FC = () => {
           
           {/* Play / Pause / Step / Reset Buttons */}
           <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+              disabled={currentStep <= 0}
+              className="p-3 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white rounded-xl border border-gray-800 transition"
+              title="Step Back (-5 Min)"
+            >
+              <SkipBack className="w-5 h-5" />
+            </button>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               className={`p-3 rounded-xl font-bold flex items-center space-x-2 transition ${
@@ -147,6 +215,14 @@ export const ReplayPage: React.FC = () => {
               </button>
             ))}
           </div>
+            <button
+              onClick={exportReplay}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded hover:bg-slate-50"
+              title="Download all replay frames as CSV"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export data</span>
+            </button>
 
         </div>
 
@@ -167,6 +243,55 @@ export const ReplayPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <section className="glass-card overflow-hidden" aria-label="Animated storm replay">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-gray-800">
+          <div>
+            <h3 className="text-sm font-bold text-gray-800">Storm track playback</h3>
+            <p className="text-xs text-gray-500">{currentFrame.time_display} · {mainObs.location.location_name}</p>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-gray-500">Intensity</span>
+            <span className="font-bold text-amber-800">{Math.round(currentFrame.storm_intensity_phase * 100)}%</span>
+            <span className={`px-2 py-1 rounded-sm font-semibold ${forecastedThunderstorm ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}`}>
+              {forecastedThunderstorm ? 'Thunderstorm conditions' : 'Pre-storm conditions'}
+            </span>
+          </div>
+        </div>
+        <div className="replay-stage">
+          <svg viewBox="0 0 760 280" role="img" aria-label={`Storm visualization for ${currentFrame.time_display}, intensity ${Math.round(currentFrame.storm_intensity_phase * 100)} percent`}>
+            <rect width="760" height="280" fill="#edf3f4" />
+            <path d="M0 48H760M0 104H760M0 160H760M0 216H760M100 0V280M220 0V280M340 0V280M460 0V280M580 0V280M700 0V280" className="replay-grid" />
+            <path d="M0 211C102 178 164 231 244 194S386 199 465 147 615 148 760 81" className="replay-route" />
+            <path d="M0 251C123 232 188 260 308 232S536 240 760 185" className="replay-waterway" />
+            <text x="18" y="26" className="replay-map-label">BHOPAL DISTRICT · HISTORICAL EVENT</text>
+            <text x="28" y="195" className="replay-map-label replay-map-small">BAIRAGARH</text>
+            <text x="328" y="137" className="replay-map-label replay-map-small">BHOPAL CENTRAL</text>
+            <text x="610" y="83" className="replay-map-label replay-map-small">KOLAR</text>
+            <circle cx="92" cy="201" r="5" className="replay-station" />
+            <circle cx="370" cy="149" r="5" className="replay-station" />
+            <circle cx="654" cy="94" r="5" className="replay-station" />
+            <circle cx={stormX} cy={176 - replayProgress * 85} r={stormRadius} className="replay-storm-halo" />
+            <circle cx={stormX} cy={176 - replayProgress * 85} r={Math.max(8, stormRadius * 0.34)} className="replay-storm-core" />
+            <circle cx={stormX} cy={176 - replayProgress * 85} r={stormRadius + 11} className="replay-storm-ring" />
+            {groundTruth.lightning_occurred && (
+              <g className="replay-lightning" transform={`translate(${stormX + 5} ${156 - replayProgress * 85})`}>
+                <path d="M0 0L-9 15H-2L-6 28L8 10H1L6 0Z" />
+              </g>
+            )}
+            <g transform="translate(585 241)">
+              <circle cx="0" cy="0" r="7" className="replay-storm-core" />
+              <text x="13" y="4" className="replay-legend-label">Storm core</text>
+              <circle cx="107" cy="0" r="5" className="replay-station" />
+              <text x="120" y="4" className="replay-legend-label">Weather station</text>
+            </g>
+          </svg>
+          <div className="replay-stage-footer">
+            <span>MONSOON EVENT · 5-MINUTE OBSERVATION STEPS</span>
+            <span>{currentStep + 1} / {frames.length}</span>
+          </div>
+        </div>
+      </section>
 
       {/* Grid: Historical Observations vs Forecast vs Actual Ground Truth */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

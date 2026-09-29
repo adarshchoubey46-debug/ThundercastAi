@@ -28,7 +28,7 @@ def test_xgboost_nowcaster():
     nowcaster = XGBoostNowcaster()
     result = nowcaster.predict_location(obs)
     
-    assert result.is_demo is True
+    assert result.source_name == "Operational_Nowcast_Engine"
     assert result.source_type == "MODEL_PREDICTION"
     assert len(result.predictions) == 4
     assert result.predictions[0].thunderstorm_probability >= 0.0

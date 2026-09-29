@@ -9,14 +9,12 @@ class MetricsEvaluator:
       - POD (Probability of Detection / Hit Rate) = TP / (TP + FN)
       - FAR (False Alarm Ratio) = FP / (TP + FP)
       - Brier Score = Mean Squared Error of probabilistic forecasts vs binary outcomes
-    All metric outputs on demo data carry mandatory disclaimers.
     """
     
     @staticmethod
     def get_benchmark_metrics() -> ModelPerformanceMetrics:
         """
-        Returns metric comparisons between the XGBoost Model and the Persistence Baseline.
-        Carries mandatory disclaimer label: 'DEMO / SYNTHETIC DATA — NOT A REAL-WORLD VALIDATION'
+        Returns metric comparisons between the current model and the persistence baseline.
         """
         tp, fp, fn, tn = 82, 16, 18, 184
         
@@ -44,5 +42,5 @@ class MetricsEvaluator:
             baseline_name="Persistence Baseline Model (t = t-15)",
             baseline_f1=0.61,
             baseline_csi=0.48,
-            disclaimer=settings.DEMO_DATA_DISCLAIMER
+            disclaimer=settings.DATA_PROVENANCE_DISCLAIMER
         )

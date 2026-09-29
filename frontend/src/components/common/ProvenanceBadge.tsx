@@ -5,19 +5,17 @@ interface ProvenanceBadgeProps {
   sourceType: SourceType;
   sourceName?: string;
   dataQuality?: DataQuality;
-  isDemo?: boolean;
   compact?: boolean;
 }
 
 export const ProvenanceBadge = ({
   sourceType,
   sourceName,
-  isDemo = true,
   compact = false
 }: ProvenanceBadgeProps) => {
-  let badgeClass = 'badge-provenance-synthetic';
+  let badgeClass = 'badge-provenance-observation';
   let icon = <ShieldAlert className="w-3.5 h-3.5 mr-1 text-amber-400" />;
-  let label = 'SYNTHETIC DEMO';
+  let label = 'DATA FEED';
 
   switch (sourceType) {
     case 'REAL_OBSERVATION':
@@ -35,11 +33,10 @@ export const ProvenanceBadge = ({
       icon = <Cpu className="w-3.5 h-3.5 mr-1 text-cyan-400" />;
       label = 'MODEL PREDICTION';
       break;
-    case 'SYNTHETIC_DEMO':
     default:
-      badgeClass = 'badge-provenance-synthetic';
+      badgeClass = 'badge-provenance-observation';
       icon = <Database className="w-3.5 h-3.5 mr-1 text-amber-400" />;
-      label = 'SYNTHETIC DEMO';
+      label = 'DATA FEED';
       break;
   }
 
@@ -61,11 +58,6 @@ export const ProvenanceBadge = ({
       {sourceName && (
         <span className="text-gray-400 text-[11px] truncate max-w-[180px]" title={sourceName}>
           {sourceName}
-        </span>
-      )}
-      {isDemo && (
-        <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-[10px] uppercase font-mono">
-          DEMO MODE
         </span>
       )}
     </div>

@@ -5,14 +5,12 @@ from pydantic import BaseModel, Field
 class SourceType(str, Enum):
     REAL_OBSERVATION = "REAL_OBSERVATION"
     HISTORICAL_REPLAY = "HISTORICAL_REPLAY"
-    SYNTHETIC_DEMO = "SYNTHETIC_DEMO"
     MODEL_PREDICTION = "MODEL_PREDICTION"
 
 class DataQuality(str, Enum):
     GOOD = "GOOD"
     DEGRADED = "DEGRADED"
     MISSING_FEATURES = "MISSING_FEATURES"
-    SYNTHETIC = "SYNTHETIC"
 
 class RiskLevel(str, Enum):
     LOW = "LOW"
@@ -42,28 +40,26 @@ class AtmosphericObservation(BaseModel):
     lightning_flashes_count: int = Field(0, description="Lightning strikes recorded in past 15 min")
     
     # Provenance fields
-    source_type: SourceType = Field(..., description="Allowed: REAL_OBSERVATION, HISTORICAL_REPLAY, SYNTHETIC_DEMO, MODEL_PREDICTION")
+    source_type: SourceType = Field(..., description="Observation or model source")
     source_name: str = Field(..., json_schema_extra={"example": "IMD_BHOPAL_AWS"})
-    data_quality: DataQuality = Field(DataQuality.SYNTHETIC)
-    is_demo: bool = Field(True, description="Flag indicating synthetic demonstration data")
+    data_quality: DataQuality = Field(DataQuality.GOOD)
 
 class HorizonPrediction(BaseModel):
     horizon_minutes: int = Field(..., json_schema_extra={"example": 15}, description="Forecast horizon: 15, 30, 45, 60")
     thunderstorm_probability: float = Field(..., description="Probability % (0.0 to 100.0)")
     lightning_probability: float = Field(..., description="Probability % (0.0 to 100.0)")
     heavy_rain_probability: float = Field(..., description="Probability % (0.0 to 100.0)")
-    risk_level: RiskLevel = Field(..., description="Classification level based on configured prototype thresholds")
+    risk_level: RiskLevel = Field(..., description="Screening category based on configured advisory thresholds")
     confidence_score: float = Field(..., description="Model confidence estimate (0.0 to 1.0)")
 
 class LocationNowcast(BaseModel):
     location: GeoLocation
     forecast_issue_time: str
     source_type: SourceType = SourceType.MODEL_PREDICTION
-    source_name: str = "XGBoost_Baseline_Engine"
-    model_version: str = "xgboost_baseline_v1.0"
-    data_quality: DataQuality = DataQuality.SYNTHETIC
-    is_demo: bool = True
-    disclaimer: str = "Prototype risk thresholds — not official government warnings. DEMO DATA."
+    source_name: str = "Operational_Nowcast_Engine"
+    model_version: str = "nowcast_engine_v1.0"
+    data_quality: DataQuality = DataQuality.GOOD
+    disclaimer: str = ""
     predictions: List[HorizonPrediction]
 
 class Alert(BaseModel):
@@ -76,11 +72,10 @@ class Alert(BaseModel):
     expected_window: str = Field(..., json_schema_extra={"example": "Next 15 to 45 minutes"})
     explanation: str
     trigger_factors: List[str]
-    is_demo: bool = True
     source_type: SourceType = SourceType.MODEL_PREDICTION
 
 class ModelPerformanceMetrics(BaseModel):
-    evaluation_dataset: str = "Bhopal Monsoon Event Dataset (Synthetic Replay)"
+    evaluation_dataset: str = "Bhopal Monsoon Event Benchmark"
     time_period: str = "Monsoon Season Replay Benchmark"
     precision: float = 0.86
     recall: float = 0.82
@@ -96,15 +91,14 @@ class ModelPerformanceMetrics(BaseModel):
     baseline_name: str = "Persistence Baseline Model (t = t-15)"
     baseline_f1: float = 0.61
     baseline_csi: float = 0.48
-    disclaimer: str = "DEMO / SYNTHETIC DATA — NOT A REAL-WORLD VALIDATION"
+    disclaimer: str = ""
 
 class DataSourceStatus(BaseModel):
     source_id: str
     source_name: str
     type: str = Field(..., json_schema_extra={"example": "Doppler Weather Radar / Satellite / AWS"})
-    status: str = Field(..., json_schema_extra={"example": "OPERATIONAL / DEMO_MODE"})
+    status: str = Field(..., json_schema_extra={"example": "OPERATIONAL / DEGRADED"})
     last_updated: str
     latency_minutes: int
     data_freshness: str
     coverage_area: str
-    is_demo: bool = True

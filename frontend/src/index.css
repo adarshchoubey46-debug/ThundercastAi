@@ -43,7 +43,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 .badge-low, .badge-moderate, .badge-high, .badge-severe,
-.badge-provenance-synthetic, .badge-provenance-prediction,
+.badge-provenance-prediction,
 .badge-provenance-observation, .badge-provenance-replay {
   display: inline-flex;
   align-items: center;
@@ -55,7 +55,6 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .badge-moderate { background: #fff4d6; color: #795400; border: 1px solid #e8d18c; }
 .badge-high { background: #fff0e6; color: #9a4217; border: 1px solid #e9b89b; }
 .badge-severe { background: #fbe9e9; color: #9b2525; border: 1px solid #e3aaaa; }
-.badge-provenance-synthetic { background: #fff7df; color: #795400; border: 1px dashed #d8bd72; }
 .badge-provenance-prediction { background: #e8f2fa; color: #175a91; border: 1px solid #b8d0e4; }
 .badge-provenance-observation { background: #eaf1f7; color: #28587d; border: 1px solid #c0d1df; }
 .badge-provenance-replay { background: #f0edf8; color: #5e4b85; border: 1px solid #d1c7e5; }
@@ -65,6 +64,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 [class*="bg-gray-800"], [class*="bg-gray-700"] { background-color: #edf1f5 !important; }
 [class*="text-gray-100"], [class*="text-gray-200"], [class*="text-gray-300"] { color: #26384b !important; }
 [class*="text-gray-400"], [class*="text-gray-500"] { color: #586779 !important; }
+main .text-white { color: #000 !important; }
 [class*="border-gray-900"], [class*="border-gray-800"], [class*="border-gray-700"] { border-color: #d8e0e8 !important; }
 [class*="bg-cyan-950"], [class*="bg-blue-950"] { background-color: #e8f2fa !important; }
 [class*="bg-amber-950"] { background-color: #fff6df !important; }
@@ -91,6 +91,34 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   border: 1px solid var(--gov-border);
   border-radius: 4px;
 }
+
+.replay-stage {
+  position: relative;
+  overflow: hidden;
+  background: #edf3f4;
+}
+
+.replay-stage svg {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  max-height: 360px;
+}
+
+.replay-grid { stroke: #d4e0e2; stroke-width: 1; }
+.replay-route { fill: none; stroke: #688da1; stroke-width: 3; stroke-dasharray: 7 7; }
+.replay-waterway { fill: none; stroke: #9ac8d3; stroke-width: 11; opacity: 0.65; }
+.replay-map-label { fill: #536b77; font: 700 12px "Segoe UI", sans-serif; letter-spacing: 1px; }
+.replay-map-small { font-size: 10px; }
+.replay-station { fill: #17618a; stroke: #fff; stroke-width: 3; }
+.replay-storm-halo { fill: #e8a435; opacity: 0.24; transition: all 700ms ease; }
+.replay-storm-core { fill: #b64331; stroke: #fff; stroke-width: 2; }
+.replay-storm-ring { fill: none; stroke: #b64331; stroke-width: 2; opacity: 0.65; transition: all 700ms ease; }
+.replay-lightning path { fill: #d99316; stroke: #fff; stroke-width: 1.5; animation: replay-flash 900ms steps(2, end) infinite; }
+.replay-legend-label { fill: #536b77; font: 11px "Segoe UI", sans-serif; }
+.replay-stage-footer { display: flex; justify-content: space-between; padding: 9px 16px; border-top: 1px solid #d4e0e2; color: #647780; background: #f8faf9; font: 10px "Segoe UI", sans-serif; letter-spacing: 0.7px; }
+
+@keyframes replay-flash { 50% { opacity: 0.3; } }
 
 @media (max-width: 640px) {
   .leaflet-control-attribution { font-size: 9px; }

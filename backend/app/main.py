@@ -6,7 +6,7 @@ from app.api.router import api_router
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    description="ThunderCast AI - Advanced Thunderstorm & Lightning Nowcasting Platform"
+    description="Vajra Kavach - Regional Severe Weather Early-Warning Platform"
 )
 
 # Enable CORS for local Vite development server
@@ -14,8 +14,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://thundercast-ai.vercel.app",  # apna actual Vercel URL
-],  # For hackathon/demo local environment
+],  # Local development and deployed frontend origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,8 +27,8 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to ThunderCast AI API",
+        "message": "Welcome to Vajra Kavach API",
         "docs": "/docs",
         "health": f"{settings.API_V1_STR}/health",
-        "disclaimer": settings.DEMO_DATA_DISCLAIMER
+        "disclaimer": settings.DATA_PROVENANCE_DISCLAIMER
     }
