@@ -4,7 +4,8 @@ import type {
   Alert,
   HistoricalFrame,
   ModelPerformanceMetrics,
-  DataSourceStatus
+  DataSourceStatus,
+  WeatherRiskForecast
 } from '../types/weather';
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
@@ -72,6 +73,39 @@ export async function fetchNowcast(): Promise<LocationNowcast[]> {
       { horizon_minutes: 60, thunderstorm_probability: 42.0, lightning_probability: 35.0, heavy_rain_probability: 48.0, risk_level: 'MODERATE', confidence_score: 0.75 }
     ]
   }));
+}
+
+export async function fetchWeatherRisk(latitude = 23.2599, longitude = 77.4126): Promise<WeatherRiskForecast> {
+  const unavailable = (message: string): WeatherRiskForecast => ({
+    available: false,
+    provider: 'unavailable',
+    latitude,
+    longitude,
+    season_context: '',
+    generated_at_utc: new Date().toISOString(),
+    cached: false,
+    stale: false,
+    message,
+    disclaimer: 'Thunderstorm potential is an indicator derived from weather fields, not an official warning. Follow IMD and local authority alerts.',
+    hours: []
+  });
+
+  try {
+    const url = new URL(`${API_BASE}/weather-risk`);
+    url.searchParams.set('latitude', String(latitude));
+    url.searchParams.set('longitude', String(longitude));
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3500);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) return unavailable('Live weather data is temporarily unavailable. Please retry later.');
+      return await response.json() as WeatherRiskForecast;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  } catch {
+    return unavailable('Weather service is offline or slow. Follow official local alerts and try again shortly.');
+  }
 }
 
 export async function fetchAlerts(): Promise<Alert[]> {

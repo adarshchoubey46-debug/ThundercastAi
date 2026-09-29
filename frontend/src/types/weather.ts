@@ -53,6 +53,30 @@ export interface LocationNowcast {
   predictions: HorizonPrediction[];
 }
 
+export interface ThunderstormHour {
+  time: string;
+  thunderstorm_potential_pct: number | null;
+  lightning_potential_pct: number | null;
+  precipitation_probability_pct: number | null;
+  cape_jkg: number | null;
+  convective_precipitation_mm: number | null;
+  condition: string | null;
+}
+
+export interface WeatherRiskForecast {
+  available: boolean;
+  provider: string;
+  latitude: number;
+  longitude: number;
+  season_context: string;
+  generated_at_utc: string;
+  cached: boolean;
+  stale: boolean;
+  message: string;
+  disclaimer: string;
+  hours: ThunderstormHour[];
+}
+
 export interface Alert {
   id: string;
   risk_level: RiskLevel;

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import type {
   AtmosphericObservation,
-  LocationNowcast,
+  WeatherRiskForecast,
   Alert,
   DataSourceStatus
 } from '../types/weather';
 import {
   fetchObservations,
-  fetchNowcast,
+  fetchWeatherRisk,
   fetchAlerts,
   fetchDataSources
 } from '../services/api';
@@ -26,7 +26,7 @@ import {
 
 export const OverviewPage: React.FC = () => {
   const [observations, setObservations] = useState<AtmosphericObservation[]>([]);
-  const [nowcasts, setNowcasts] = useState<LocationNowcast[]>([]);
+  const [weatherRisk, setWeatherRisk] = useState<WeatherRiskForecast | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [dataSources, setDataSources] = useState<DataSourceStatus[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,14 +34,14 @@ export const OverviewPage: React.FC = () => {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [obsData, nowcastData, alertData, sourcesData] = await Promise.all([
+      const [obsData, weatherRiskData, alertData, sourcesData] = await Promise.all([
         fetchObservations(),
-        fetchNowcast(),
+        fetchWeatherRisk(),
         fetchAlerts(),
         fetchDataSources()
       ]);
       setObservations(obsData);
-      setNowcasts(nowcastData);
+      setWeatherRisk(weatherRiskData);
       setAlerts(alertData);
       setDataSources(sourcesData);
       setLoading(false);
@@ -60,7 +60,6 @@ export const OverviewPage: React.FC = () => {
     );
   }
 
-  const primaryNowcast = nowcasts[0];
   const mainObs = observations[0];
 
   const getRiskClass = (level: string) => {
@@ -168,86 +167,46 @@ export const OverviewPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Col: Next 15, 30, 45, 60-Minute Forecast Cards */}
+        {/* Right Col: Live provider forecast */}
         <div className="glass-card p-5 space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between pb-3 border-b border-gray-800">
             <div>
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <CloudLightning className="w-4 h-4 text-cyan-400" />
-                <span>Multi-Horizon Nowcast Predictions</span>
+                <span>Live Thunderstorm Outlook</span>
               </h2>
-              <p className="text-xs text-gray-400">Model Version: {primaryNowcast?.model_version}</p>
+              <p className="text-xs text-gray-400">{weatherRisk?.provider.replaceAll('_', ' ') ?? 'Weather provider'} · next hourly forecasts</p>
             </div>
-            {primaryNowcast && (
-              <ProvenanceBadge sourceType={primaryNowcast.source_type} sourceName={primaryNowcast.source_name} compact />
-            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {primaryNowcast?.predictions.map((pred) => (
-              <div
-                key={pred.horizon_minutes}
-                className="bg-gray-900/80 p-4 rounded-xl border border-gray-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-cyan-400 font-mono">+{pred.horizon_minutes} MIN</span>
-                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${getRiskClass(pred.risk_level)}`}>
-                    {pred.risk_level}
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  <div>
-                    <div className="flex justify-between text-gray-400 mb-0.5">
-                      <span>Thunderstorm</span>
-                      <span className="font-mono text-white font-bold">{pred.thunderstorm_probability}%</span>
-                    </div>
-                    <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="bg-cyan-500 h-1.5 rounded-full"
-                        style={{ width: `${pred.thunderstorm_probability}%` }}
-                      ></div>
-                    </div>
+          {weatherRisk?.available ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {weatherRisk.hours.slice(0, 4).map((hour) => (
+                <div key={hour.time} className="rounded-sm border border-gray-800 bg-gray-900/60 p-3">
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{new Date(hour.time).toLocaleString()}</span>
+                    <span>{hour.condition ?? 'Forecast'}</span>
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-gray-400 mb-0.5">
-                      <span>Lightning Strike</span>
-                      <span className="font-mono text-yellow-400 font-bold">{pred.lightning_probability}%</span>
-                    </div>
-                    <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="bg-yellow-400 h-1.5 rounded-full"
-                        style={{ width: `${pred.lightning_probability}%` }}
-                      ></div>
-                    </div>
+                  <div className="mt-2 flex items-baseline justify-between gap-2">
+                    <span className="text-xs text-gray-500">Thunderstorm potential indicator</span>
+                    <strong className="font-mono text-[#175a91]">{hour.thunderstorm_potential_pct === null ? 'N/A' : `${hour.thunderstorm_potential_pct}%`}</strong>
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-gray-400 mb-0.5">
-                      <span>Heavy Rain</span>
-                      <span className="font-mono text-blue-400 font-bold">{pred.heavy_rain_probability}%</span>
-                    </div>
-                    <div className="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="bg-blue-500 h-1.5 rounded-full"
-                        style={{ width: `${pred.heavy_rain_probability}%` }}
-                      ></div>
-                    </div>
+                  <div className="mt-1 flex items-baseline justify-between gap-2 text-xs">
+                    <span className="text-gray-500">Precipitation chance</span>
+                    <strong className="font-mono text-sky-800">{hour.precipitation_probability_pct === null ? 'N/A' : `${hour.precipitation_probability_pct}%`}</strong>
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <p role="status" className="rounded-sm border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              {weatherRisk?.message ?? 'Live forecast is unavailable. Numeric estimates are withheld; check official local alerts.'}
+            </p>
+          )}
 
-                <div className="pt-2 border-t border-gray-800 flex justify-between text-[11px] text-gray-500 font-mono">
-                  <span>Confidence:</span>
-                  <span className="text-gray-300 font-bold">{(pred.confidence_score * 100).toFixed(0)}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-3 bg-gray-950/60 rounded-lg text-xs text-gray-400 border border-gray-800 font-mono">
-            {primaryNowcast?.disclaimer}
-          </div>
+          <p className="rounded-sm border border-gray-800 bg-gray-950/60 p-3 text-xs text-gray-500">
+            {weatherRisk?.disclaimer ?? 'Thunderstorm potential is an indicator derived from forecast fields, not an official warning.'}
+          </p>
         </div>
 
       </div>
