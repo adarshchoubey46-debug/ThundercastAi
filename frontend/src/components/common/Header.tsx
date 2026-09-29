@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl leading-tight font-bold text-[#12345a]">Vajra Kavach</h1>
+              <h1 className="text-xl leading-tight font-bold text-[#12345a]">MeghDoot</h1>
               <p className="text-xs text-gray-500">Regional Weather Intelligence Dashboard</p>
             </div>
           </div>

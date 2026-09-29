@@ -28,7 +28,7 @@ export function App() {
       </main>
 
       <footer className="py-4 border-t border-gray-900 bg-white text-center text-xs text-gray-500">
-        Vajra Kavach · Regional weather decision support · Bhopal, Madhya Pradesh
+        MeghDoot · Regional weather decision support · Bhopal, Madhya Pradesh
       </footer>
     </div>
   );

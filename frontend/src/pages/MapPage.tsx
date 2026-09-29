@@ -56,12 +56,12 @@ export const MapPage: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [savedSafetySite] = useState<SavedSafetySite | null>(() => {
     try {
-      const storedSite = localStorage.getItem('vajra-kavach-safety-site');
+      const storedSite = localStorage.getItem('meghdoot-safety-site');
       if (!storedSite) return null;
       const parsed = JSON.parse(storedSite) as SavedSafetySite;
       return Number.isFinite(parsed.latitude) && Number.isFinite(parsed.longitude) ? parsed : null;
     } catch {
-      localStorage.removeItem('vajra-kavach-safety-site');
+      localStorage.removeItem('meghdoot-safety-site');
       return null;
     }
   });

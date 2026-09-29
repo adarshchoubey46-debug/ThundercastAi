@@ -9,7 +9,7 @@ def test_health_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert data["service"] == "Vajra Kavach"
+    assert data["service"] == "MeghDoot"
 
 def test_observations_endpoint():
     response = client.get("/api/observations")
@@ -17,7 +17,7 @@ def test_observations_endpoint():
     data = response.json()
     assert isinstance(data, list)
     assert len(data) > 0
-    assert data[0]["source_type"] in ["SYNTHETIC_DEMO", "HISTORICAL_REPLAY", "REAL_OBSERVATION"]
+    assert data[0]["source_type"] in ["HISTORICAL_REPLAY", "REAL_OBSERVATION"]
 
 def test_nowcast_endpoint():
     response = client.get("/api/nowcast")

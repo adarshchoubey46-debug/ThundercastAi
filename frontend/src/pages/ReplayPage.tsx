@@ -122,7 +122,7 @@ export const ReplayPage: React.FC = () => {
     const url = URL.createObjectURL(file);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'vajra-kavach-bhopal-replay.csv';
+    link.download = 'meghdoot-bhopal-replay.csv';
     document.body.appendChild(link);
     link.click();
     link.remove();

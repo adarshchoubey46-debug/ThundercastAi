@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 from typing import Dict, Any
 
 class Settings:
-    PROJECT_NAME: str = "Vajra Kavach"
+    PROJECT_NAME: str = "MeghDoot"
     API_V1_STR: str = "/api"
     MODEL_VERSION: str = "nowcast_engine_v1.0"
     

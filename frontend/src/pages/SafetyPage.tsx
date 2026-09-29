@@ -9,8 +9,8 @@ interface SafetySite {
   phone: string;
 }
 
-const SITE_STORAGE_KEY = 'vajra-kavach-safety-site';
-const CHECKLIST_STORAGE_KEY = 'vajra-kavach-safety-checklist';
+const SITE_STORAGE_KEY = 'meghdoot-safety-site';
+const CHECKLIST_STORAGE_KEY = 'meghdoot-safety-checklist';
 const preparednessItems = [
   'Identify a sturdy enclosed building and an interior room away from windows.',
   'Charge phones and keep a torch, drinking water, essential medicines, and first aid supplies ready.',
@@ -131,7 +131,7 @@ export function SafetyPage() {
             </label>
             <button type="submit" className="sm:col-span-2 px-4 py-2 bg-[#12345a] text-white rounded-sm font-semibold hover:bg-[#175a91]">Save safe location</button>
           </form>
-          <p className="text-[11px] text-gray-500">Location details stay in this browser and are marked on the weather map. They are not uploaded to Vajra Kavach.</p>
+          <p className="text-[11px] text-gray-500">Location details stay in this browser and are marked on the weather map. They are not uploaded to MeghDoot.</p>
           {savedMessage && <p role="status" className="text-xs text-emerald-800">{savedMessage}</p>}
           {site && (
             <a className="inline-flex items-center gap-1 text-xs text-[#175a91] underline" target="_blank" rel="noreferrer" href={`https://www.openstreetmap.org/?mlat=${site.latitude}&mlon=${site.longitude}#map=16/${site.latitude}/${site.longitude}`}>

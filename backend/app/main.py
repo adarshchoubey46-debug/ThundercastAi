@@ -6,7 +6,7 @@ from app.api.router import api_router
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    description="Vajra Kavach - Regional Severe Weather Early-Warning Platform"
+    description="MeghDoot - Regional Severe Weather Early-Warning Platform"
 )
 
 # Enable CORS for local Vite development server
@@ -27,7 +27,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to Vajra Kavach API",
+        "message": "Welcome to MeghDoot API",
         "docs": "/docs",
         "health": f"{settings.API_V1_STR}/health",
         "disclaimer": settings.DATA_PROVENANCE_DISCLAIMER

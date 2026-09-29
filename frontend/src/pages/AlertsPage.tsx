@@ -18,6 +18,8 @@ interface AlertsPageProps {
 export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [targetArea, setTargetArea] = useState<string>('Bhopal Central & MP Nagar');
+  const [simulatedRisk, setSimulatedRisk] = useState<Alert['risk_level']>('SEVERE');
+  const [simulationLog, setSimulationLog] = useState<string[]>([]);
   const [lastChecked, setLastChecked] = useState<string>('Checking observations...');
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
@@ -63,7 +65,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
       const newAutomaticAlerts = automaticAlerts.filter((alert) => !previousAutoAlertIds.current.has(alert.id));
       if (completedInitialCheck.current && notificationPermission === 'granted') {
         newAutomaticAlerts.filter((alert) => alert.risk_level === 'HIGH' || alert.risk_level === 'SEVERE').forEach((alert) => {
-          new Notification(`Vajra Kavach · ${alert.risk_level} screening`, {
+          new Notification(`MeghDoot · ${alert.risk_level} screening`, {
             body: `${alert.affected_area}: ${alert.trigger_factors.join('; ')}`
           });
         });
@@ -89,6 +91,14 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
       return;
     }
     setNotificationPermission(await Notification.requestPermission());
+  };
+
+  const simulateRiskAlert = () => {
+    const timestamp = new Date().toLocaleTimeString();
+    setSimulationLog((current) => [
+      `[${timestamp}] ${simulatedRisk} risk trigger evaluated for ${targetArea}`,
+      ...current
+    ]);
   };
 
   const getRiskClass = (level: string) => {
@@ -209,6 +219,27 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
                 <option>Mandideep</option>
               </select>
             </div>
+            <div>
+              <label className="block text-gray-400 mb-1">Simulate risk level:</label>
+              <select
+                value={simulatedRisk}
+                onChange={(e) => setSimulatedRisk(e.target.value as Alert['risk_level'])}
+                className="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white font-mono"
+              >
+                <option value="LOW">LOW</option>
+                <option value="MODERATE">MODERATE</option>
+                <option value="HIGH">HIGH</option>
+                <option value="SEVERE">SEVERE</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={simulateRiskAlert}
+              className="w-full py-2 bg-amber-100 hover:bg-amber-200 text-[#12345a] border border-amber-300 font-bold rounded text-xs flex items-center justify-center gap-1.5 transition"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Simulate risk alert</span>
+            </button>
           </div>
 
           {/* Broadcast Log */}
@@ -226,6 +257,18 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ active }) => {
                   No active dispatch for the selected area.
                 </div>
               )}
+            </div>
+            <span className="text-xs font-bold text-gray-400">Trigger log:</span>
+            <div className="space-y-2 max-h-[160px] overflow-y-auto font-mono text-[11px]">
+              {simulationLog.length === 0 ? (
+                <div className="text-[11px] text-gray-500 italic p-3 bg-gray-900/50 rounded border border-gray-800">
+                  No risk triggers evaluated.
+                </div>
+              ) : simulationLog.map((entry, index) => (
+                <div key={`${entry}-${index}`} className="p-2.5 bg-amber-950/30 border border-amber-800/40 rounded text-amber-800">
+                  {entry}
+                </div>
+              ))}
             </div>
           </div>
         </div>
